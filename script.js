@@ -12,7 +12,7 @@ const $ = id => document.getElementById(id);
 const vid = $('vid'), pads = [...document.querySelectorAll('.pad')], fps = [...document.querySelectorAll('.fp')];
 let prevOn = new Set();
 function setFp(i, cls, txt) { fps[i].classList.remove('ok', 'err'); if (cls) fps[i].classList.add(cls); fps[i].querySelector('.lbl').textContent = txt; }
-let state = 'prep', urls = [], loaded = false, holdT = null, taps = 0;
+let state = 'prep', urls = [], loaded = false, holdT = null, taps = 0, waitingForLandscape = false;
 
 function show(id) {
   ['prep', 'hand', 'scan', 'end'].forEach(s =>
@@ -91,11 +91,13 @@ function trigger() {
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
     const continueToVideo = () => {
       if (state !== 'scan' || window.matchMedia('(orientation: portrait)').matches) return;
+      waitingForLandscape = false;
       window.removeEventListener('orientationchange', continueToVideo);
       window.removeEventListener('resize', continueToVideo);
       playFrom(0);
     };
     if (window.matchMedia('(orientation: portrait)').matches) {
+      waitingForLandscape = true;
       $('orientationTitle').textContent = 'ROTATE TO LANDSCAPE';
       $('orientationMessage').textContent = 'Scanning complete. The montage is ready.';
       $('orientationHint').textContent = 'Turn your iPad horizontally to continue.';
@@ -103,11 +105,14 @@ function trigger() {
       window.addEventListener('orientationchange', continueToVideo);
       window.addEventListener('resize', continueToVideo);
     } else {
+      waitingForLandscape = false;
       playFrom(0);
     }
   }, CONFIG.scanMs);
 }
 function playFrom(i) {
+  waitingForLandscape = false;
+  enforceOrientationImpl();
   while (i < urls.length && !urls[i]) i++;
   if (i >= urls.length) return finish();
   state = 'play'; show('none');
@@ -131,28 +136,11 @@ addEventListener('keydown', e => {            // desktop testing, only when test
 });
 
 /* ---- Portrait only for the hand scan; montage and final slide stay landscape ---- */
-function enforceOrientation() {
-  const warning = $('orientationWarning');
-  if (!warning) return;
-  const scanning = state === 'hand' || state === 'scan';
-  const portrait = window.matchMedia('(orientation: portrait)').matches;
-  const showWarning = scanning && (state === 'hand' ? !portrait : false);
-  warning.classList.toggle('visible', showWarning);
-  warning.setAttribute('aria-hidden', String(!showWarning));
-  if (state === 'hand') {
-    $('orientationTitle').textContent = 'PLEASE ROTATE YOUR iPAD';
-    $('orientationMessage').textContent = 'The hand scanner runs in portrait mode.';
-    $('orientationHint').textContent = 'Turn your iPad vertically to continue.';
-  }
-}
-function enforceOrientation() {
-  enforceOrientation = enforceOrientationImpl;
-}
 function enforceOrientationImpl() {
   const warning = $('orientationWarning');
   if (!warning) return;
   const portrait = window.matchMedia('(orientation: portrait)').matches;
-  const showWarning = state === 'hand' && !portrait;
+  const showWarning = (state === 'hand' && !portrait) || (state === 'scan' && waitingForLandscape);
   warning.classList.toggle('visible', showWarning);
   warning.setAttribute('aria-hidden', String(!showWarning));
   if (state === 'hand') {
