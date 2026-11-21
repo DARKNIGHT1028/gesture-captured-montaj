@@ -1,6 +1,6 @@
 /* ===== TOUCH OF EXCELLENCE – settings (edit here) ===== */
 const CONFIG = {
-  videos: ['videos/montage.mp4'], // plays after the scan; the Majlis slide appears when it ends
+  videos: ['video/montage-after-scan.mp4'], // plays after the scan; the Majlis slide appears when it ends
   testMode: false,    // false = the five-finger scan is the ONLY way forward. true = show SKIP (TEST) button + keys t / r
   holdMs: 700,        // how long all five fingers must stay down
   scanMs: 4200,       // length of the scanning animation
