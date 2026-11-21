@@ -1,0 +1,52 @@
+:root{--bg:#04060d;--fg:#e8f1ff;--mut:#8aa0c0;--ac:#50dcff;color-scheme:dark}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;touch-action:none;overscroll-behavior:none}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .7s;background:radial-gradient(ellipse at 50% 40%,#0b1a33 0%,var(--bg) 70%)}
+.screen.on{opacity:1;pointer-events:auto}
+#scan{background:transparent}
+h1{font-size:clamp(2rem,6vw,4.5rem);letter-spacing:.14em;margin:0 0 8px;text-shadow:0 0 30px rgba(80,220,255,.5)}
+h2{font-size:clamp(1.1rem,2.6vw,1.8rem);letter-spacing:.16em;font-weight:500;margin:0 0 12px;color:var(--ac)}
+.sub{color:var(--mut);letter-spacing:.3em;text-transform:uppercase;margin:6px 0 28px}
+button{font:inherit;font-size:1.2rem;letter-spacing:.2em;color:var(--fg);background:rgba(80,220,255,.12);border:1px solid var(--ac);border-radius:999px;padding:14px 40px;cursor:pointer}
+button:disabled{opacity:.5}
+#pmsg{color:var(--mut);margin-top:20px;max-width:560px}
+#tpl{height:66vh;max-width:94vw;overflow:visible}
+#cnt{font-size:1.4rem;letter-spacing:.3em;margin:10px 0 0;color:var(--mut)}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* scan */
+.sweep{position:absolute;left:0;right:0;height:4px;background:var(--ac);box-shadow:0 0 40px 10px rgba(80,220,255,.6);animation:sweep 1.5s linear infinite}
+@keyframes sweep{from{top:-4px}to{top:100%}}
+.ring{position:absolute;left:50%;top:50%;width:20vmin;height:20vmin;margin:-10vmin 0 0 -10vmin;border:2px solid var(--ac);border-radius:50%;opacity:0;animation:ping 2.4s ease-out infinite}
+.ring.r2{animation-delay:.8s}.ring.r3{animation-delay:1.6s}
+@keyframes ping{0%{transform:scale(.3);opacity:.9}100%{transform:scale(4);opacity:0}}
+#slines{position:absolute;bottom:10vh;left:0;right:0;font-size:clamp(1.5rem,5vw,3rem);letter-spacing:.35em;color:#fff;text-shadow:0 0 20px var(--ac);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.6}}
+/* test button */
+.test{font-size:.9rem;padding:10px 26px;letter-spacing:.15em}
+#skipT{margin-top:14px}
+/* video + end */
+#vid{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;pointer-events:none;transition:opacity .6s;z-index:5}
+#vid.on{opacity:1}
+#end{z-index:6;padding:0;background:#030818}
+#end img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+#restart{position:absolute;top:0;left:0;width:90px;height:90px}
+
+/* hand scanner (low-poly glowing hand + fingertip status) */
+.hand{filter:drop-shadow(0 0 14px rgba(60,170,255,.75))}
+.mesh polygon{stroke:rgba(150,225,255,.5);stroke-width:.6;stroke-linejoin:round}
+.dots circle{fill:#bff0ff;opacity:.9}
+.fl{animation:fl 2.4s ease-in-out infinite alternate}
+.fl:nth-child(odd){animation-delay:-1.2s}.fl:nth-child(3n){animation-duration:3.3s}
+@keyframes fl{from{opacity:.35}to{opacity:1}}
+.fp{color:#50dcff}
+.fp.ok,#hand.locked .fp{color:#7dffa0}
+.fp.err{color:#ff5d6c}
+.rings circle{fill:none;stroke:currentColor;stroke-width:1.6;transform-box:fill-box;transform-origin:center;animation:rg 1.8s ease-out infinite}
+.rings circle:nth-child(2){animation-delay:.3s}.rings circle:nth-child(3){animation-delay:.6s}
+@keyframes rg{0%{transform:scale(.55);opacity:.95}100%{transform:scale(1.15);opacity:.25}}
+.fp.ok .rings circle,#hand.locked .rings circle{animation:none;opacity:.9}
+.core{fill:#fff;filter:drop-shadow(0 0 7px currentColor) drop-shadow(0 0 14px currentColor)}
+.lbl{fill:currentColor;font-size:15px;letter-spacing:.04em;font-weight:500}
+.ul{stroke:currentColor;stroke-width:1;opacity:.8}
+.pad{fill:transparent;stroke:none}
+#hand.locked #cnt{opacity:0}
