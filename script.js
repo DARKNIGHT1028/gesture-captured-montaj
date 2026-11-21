@@ -122,9 +122,10 @@ function playFrom(i) {
 }
 function finish() { vid.classList.remove('on'); state = 'end'; show('end'); }
 
-/* ---- Test mode ---- */
-if (!CONFIG.testMode) document.querySelectorAll('.test').forEach(b => b.remove());
-else $('skipT').onclick = trigger;
+/* ---- Desktop test shortcut ---- */
+// The skip button is available on desktop browsers only (CSS pointer/hover check).
+// It is deliberately kept out of the iPad/touchscreen ceremony interface.
+$('skipT').onclick = trigger;
 
 /* ---- Helpers ---- */
 document.addEventListener('click', () => { if (state === 'play' && vid.paused) vid.play(); });

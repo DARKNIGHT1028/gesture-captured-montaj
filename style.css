@@ -21,9 +21,10 @@ button:disabled{opacity:.5}
 @keyframes ping{0%{transform:scale(.3);opacity:.9}100%{transform:scale(4);opacity:0}}
 #slines{position:absolute;bottom:10vh;left:0;right:0;font-size:clamp(1.5rem,5vw,3rem);letter-spacing:.35em;color:#fff;text-shadow:0 0 20px var(--ac);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:.6}}
-/* test button */
+/* Desktop-only test button */
 .test{font-size:.9rem;padding:10px 26px;letter-spacing:.15em}
-#skipT{margin-top:14px}
+#skipT{display:none;margin-top:14px}
+@media (hover:hover) and (pointer:fine){#skipT{display:inline-flex;align-items:center;justify-content:center}}
 /* video + end */
 #vid{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;pointer-events:none;transition:opacity .6s;z-index:5}
 #vid.on{opacity:1}
