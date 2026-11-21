@@ -39,14 +39,15 @@ $('bEnter').onclick = async () => {
 
 async function enter() {
   try { await document.documentElement.requestFullscreen(); } catch (e) {}
-  // Ask supported browsers to keep the full experience in landscape.
-  try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}
+  // Begin in landscape; the scanner requests portrait when it opens.
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
   try { await navigator.wakeLock.request('screen'); } catch (e) {}
   const first = urls.find(Boolean);           // unlock the video element inside this tap
   if (first) { vid.src = first; vid.play().then(() => { vid.pause(); vid.currentTime = 0; }).catch(() => {}); }
   resetHand();
 }
 function resetHand() {
+  try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
   vid.pause(); vid.classList.remove('on'); $('hand').classList.remove('locked');
   prevOn = new Set(); fps.forEach((f, i) => setFp(i, '', 'Loading…')); $('cnt').textContent = '0 / 5';
   state = 'hand'; show('hand');
@@ -83,7 +84,28 @@ function trigger() {
   $('hand').classList.add('locked'); fps.forEach((f, i) => setFp(i, 'ok', 'Confirmed')); show('scan');
   const L = CONFIG.lines, el = $('slines'); let i = 0; el.textContent = L[0];
   const iv = setInterval(() => { if (++i < L.length) el.textContent = L[i]; }, CONFIG.scanMs / L.length);
-  setTimeout(() => { clearInterval(iv); playFrom(0); }, CONFIG.scanMs);
+  setTimeout(() => {
+    clearInterval(iv);
+    // Release portrait lock after the scan. Keep the scan screen visible until
+    // the operator turns the iPad back to landscape for the montage.
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    const continueToVideo = () => {
+      if (state !== 'scan' || window.matchMedia('(orientation: portrait)').matches) return;
+      window.removeEventListener('orientationchange', continueToVideo);
+      window.removeEventListener('resize', continueToVideo);
+      playFrom(0);
+    };
+    if (window.matchMedia('(orientation: portrait)').matches) {
+      $('orientationTitle').textContent = 'ROTATE TO LANDSCAPE';
+      $('orientationMessage').textContent = 'Scanning complete. The montage is ready.';
+      $('orientationHint').textContent = 'Turn your iPad horizontally to continue.';
+      enforceOrientation();
+      window.addEventListener('orientationchange', continueToVideo);
+      window.addEventListener('resize', continueToVideo);
+    } else {
+      playFrom(0);
+    }
+  }, CONFIG.scanMs);
 }
 function playFrom(i) {
   while (i < urls.length && !urls[i]) i++;
@@ -108,15 +130,38 @@ addEventListener('keydown', e => {            // desktop testing, only when test
   if (e.key === 'r' && loaded) resetHand();
 });
 
-/* ---- Keep the complete experience in landscape ---- */
-function enforceLandscape() {
+/* ---- Portrait only for the hand scan; montage and final slide stay landscape ---- */
+function enforceOrientation() {
+  const warning = $('orientationWarning');
+  if (!warning) return;
+  const scanning = state === 'hand' || state === 'scan';
+  const portrait = window.matchMedia('(orientation: portrait)').matches;
+  const showWarning = scanning && (state === 'hand' ? !portrait : false);
+  warning.classList.toggle('visible', showWarning);
+  warning.setAttribute('aria-hidden', String(!showWarning));
+  if (state === 'hand') {
+    $('orientationTitle').textContent = 'PLEASE ROTATE YOUR iPAD';
+    $('orientationMessage').textContent = 'The hand scanner runs in portrait mode.';
+    $('orientationHint').textContent = 'Turn your iPad vertically to continue.';
+  }
+}
+function enforceOrientation() {
+  enforceOrientation = enforceOrientationImpl;
+}
+function enforceOrientationImpl() {
   const warning = $('orientationWarning');
   if (!warning) return;
   const portrait = window.matchMedia('(orientation: portrait)').matches;
-  warning.classList.toggle('visible', portrait);
-  warning.setAttribute('aria-hidden', String(!portrait));
+  const showWarning = state === 'hand' && !portrait;
+  warning.classList.toggle('visible', showWarning);
+  warning.setAttribute('aria-hidden', String(!showWarning));
+  if (state === 'hand') {
+    $('orientationTitle').textContent = 'PLEASE ROTATE YOUR iPAD';
+    $('orientationMessage').textContent = 'The hand scanner runs in portrait mode.';
+    $('orientationHint').textContent = 'Turn your iPad vertically to continue.';
+  }
 }
-window.addEventListener('resize', enforceLandscape, { passive: true });
-window.addEventListener('orientationchange', enforceLandscape);
-if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', enforceLandscape);
-enforceLandscape();
+window.addEventListener('resize', enforceOrientationImpl, { passive: true });
+window.addEventListener('orientationchange', enforceOrientationImpl);
+if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', enforceOrientationImpl);
+enforceOrientationImpl();
