@@ -125,15 +125,20 @@ function finish() { vid.classList.remove('on'); state = 'end'; show('end'); }
 /* ---- Desktop test shortcut ---- */
 // The skip button is available on desktop browsers only (CSS pointer/hover check).
 // It is deliberately kept out of the iPad/touchscreen ceremony interface.
-  const skipToVideo = () => {
-    clearTimeout(holdT); holdT = null;
-    waitingForLandscape = false;
-    state = 'scan';
-    $('hand').classList.remove('locked');
-    playFrom(0);
-  };
-  $('skipT').onclick = skipToVideo;
-  $('skipOverlay').onclick = skipToVideo;
+function skipToVideo(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  clearTimeout(holdT);
+  holdT = null;
+  waitingForLandscape = false;
+  $('orientationWarning').classList.remove('visible');
+  $('orientationWarning').setAttribute('aria-hidden', 'true');
+  $('hand').classList.remove('locked');
+  state = 'play';
+  show('none');
+  playFrom(0);
+}
+$('skipT').addEventListener('click', skipToVideo);
+$('skipOverlay').addEventListener('click', skipToVideo);
 
 /* ---- Helpers ---- */
 document.addEventListener('click', () => { if (state === 'play' && vid.paused) vid.play(); });
