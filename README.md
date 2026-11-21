@@ -1,38 +1,30 @@
-# TOUCH OF EXCELLENCE – Gesture Captured Montage
+# TOUCH OF EXCELLENCE
 
-An interactive, gesture-controlled presentation experience created for **SK Taman Jasmin's Majlis Apresiasi Kecemerlangan (MAKSEM) 2026**, taking place on **28 November 2026**.
+This repository is being updated from the supplied TOUCH-OF-EXCELLENCE project ZIP.
 
-Designed to run in a web browser on an iPad and be mirrored to a projector. Guests enter the experience, complete a five-finger hand scan, watch the achievement montage, and finish on the event appreciation slide.
+## Required project assets
 
-## Features
+Upload the two video files to these exact paths after the website files are published:
 
-- Five-finger touch verification with fingertip status feedback.
-- Animated scanning sequence with visual confirmation.
-- Full-screen montage playback.
-- Final MAKSEM 2026 event slide.
-- Built with HTML, CSS and JavaScript; no database or framework required.
+- `videos/intro.mp4`
+- `videos/main.mp4`
 
-## Project files
+Other bundled assets used by the project:
 
-- `index.html` – presentation screens and hand scanner.
-- `style.css` – visual design and animations.
-- `script.js` – touch detection, scan flow and video playback.
-- `images/poster.jpg` – final event slide.
-- `video/montage-after-scan.mp4` – montage video played after the scan.
+- `audio/scan.wav`
+- `images/crest.png`
+- `images/date.png`
+- `images/majlis.png`
+- `images/poster.jpg`
+- `fonts/Poppins-Light.ttf`
+- `fonts/Poppins-Regular.ttf`
+- `fonts/Poppins-Medium.ttf`
+- `fonts/Poppins-Bold.ttf`
 
-Keep the video folder name and filename unchanged because they are referenced in `script.js`.
+The source project ZIP contains these assets. Keep the folder names and filenames exactly as shown because the HTML and CSS refer to them by relative path.
 
-## Run and present
+## Experience flow
 
-Open the site through GitHub Pages or serve the project folder using a local web server. For the ceremony, use the iPad in landscape orientation, mirror it to the projector, turn off Multitasking Gestures, and set Auto-Lock to Never. Test the five-finger gesture and video playback on the actual iPad before the event.
+START page → intro video → five-finger hand scan → scan animation with audio → main video → animated Majlis Apresiasi slide.
 
-In `script.js`, keep `testMode: false` for the ceremony. Set it to `true` only when testing; this enables a skip button and keyboard shortcuts.
-
-## Links
-
-- **Repository:** https://github.com/DARKNIGHT1028/gesture-captured-montaj
-- **GitHub Pages:** https://darknight1028.github.io/gesture-captured-montaj/ (available after Pages is enabled and deployment completes)
-
----
-
-Created for **SK Taman Jasmin – MAKSEM 2026**.
+For the ceremony, keep `testMode` disabled in `script.js`.
