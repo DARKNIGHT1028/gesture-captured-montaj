@@ -125,7 +125,14 @@ function finish() { vid.classList.remove('on'); state = 'end'; show('end'); }
 /* ---- Desktop test shortcut ---- */
 // The skip button is available on desktop browsers only (CSS pointer/hover check).
 // It is deliberately kept out of the iPad/touchscreen ceremony interface.
-$('skipT').onclick = trigger;
+$('skipT').onclick = () => {
+  // Desktop testing: bypass both hand detection and the orientation hand-off.
+  clearTimeout(holdT); holdT = null;
+  waitingForLandscape = false;
+  state = 'scan';
+  $('hand').classList.remove('locked');
+  playFrom(0);
+};
 
 /* ---- Helpers ---- */
 document.addEventListener('click', () => { if (state === 'play' && vid.paused) vid.play(); });
