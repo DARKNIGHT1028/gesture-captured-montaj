@@ -10,6 +10,12 @@
 </head>
 <body>
 
+<!-- Intro video plays immediately after ENTER; scanner follows when it ends -->
+<video id="intro" playsinline webkit-playsinline preload="auto">
+  <source src="images/intro.mp4" type="video/mp4">
+</video>
+<audio id="scanSound" preload="auto" src="images/scan.wav"></audio>
+
 <!-- 1. Start screen: one tap loads the video and goes to the scanner -->
 <section id="prep" class="screen on">
   <h1>TOUCH OF EXCELLENCE</h1>
