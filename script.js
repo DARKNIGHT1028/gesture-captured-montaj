@@ -39,6 +39,8 @@ $('bEnter').onclick = async () => {
 
 async function enter() {
   try { await document.documentElement.requestFullscreen(); } catch (e) {}
+  // Ask supported browsers to keep the full experience in landscape.
+  try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}
   try { await navigator.wakeLock.request('screen'); } catch (e) {}
   const first = urls.find(Boolean);           // unlock the video element inside this tap
   if (first) { vid.src = first; vid.play().then(() => { vid.pause(); vid.currentTime = 0; }).catch(() => {}); }
@@ -105,3 +107,16 @@ addEventListener('keydown', e => {            // desktop testing, only when test
   if (e.key === 't' && state === 'hand') trigger();
   if (e.key === 'r' && loaded) resetHand();
 });
+
+/* ---- Keep the complete experience in landscape ---- */
+function enforceLandscape() {
+  const warning = $('orientationWarning');
+  if (!warning) return;
+  const portrait = window.matchMedia('(orientation: portrait)').matches;
+  warning.classList.toggle('visible', portrait);
+  warning.setAttribute('aria-hidden', String(!portrait));
+}
+window.addEventListener('resize', enforceLandscape, { passive: true });
+window.addEventListener('orientationchange', enforceLandscape);
+if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', enforceLandscape);
+enforceLandscape();
