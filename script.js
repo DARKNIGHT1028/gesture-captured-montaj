@@ -50,7 +50,7 @@ function resetHand() {
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
   vid.pause(); vid.classList.remove('on'); $('hand').classList.remove('locked');
   prevOn = new Set(); fps.forEach((f, i) => setFp(i, '', 'Loading…')); $('cnt').textContent = '0 / 5';
-  state = 'hand'; show('hand');
+  state = 'hand'; show('hand'); enforceOrientationImpl();
 }
 
 /* ---- Step 2: five-finger detection ---- */
@@ -101,7 +101,7 @@ function trigger() {
       $('orientationTitle').textContent = 'ROTATE TO LANDSCAPE';
       $('orientationMessage').textContent = 'Scanning complete. The montage is ready.';
       $('orientationHint').textContent = 'Turn your iPad horizontally to continue.';
-      enforceOrientation();
+      enforceOrientationImpl();
       window.addEventListener('orientationchange', continueToVideo);
       window.addEventListener('resize', continueToVideo);
     } else {
