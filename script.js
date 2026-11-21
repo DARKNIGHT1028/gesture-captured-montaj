@@ -20,23 +20,58 @@ function show(id) {
 }
 
 /* ---- Step 1: ENTER loads the video into memory (no buffering later), unlocks playback, opens the scanner ---- */
+let startupPromise = null;
 $('bEnter').onclick = async () => {
+  if (startupPromise) return; // Ignore rapid/repeated taps while startup is running.
   const btn = $('bEnter');
-  if (!loaded) {
-    btn.disabled = true;
-    for (let i = 0; i < CONFIG.videos.length; i++) {
-      $('pmsg').textContent = `Loading ${i + 1} / ${CONFIG.videos.length}…`;
-      try {
-        const r = await fetch(CONFIG.videos[i]);
-        if (!r.ok) throw 0;
-        urls.push(URL.createObjectURL(await r.blob()));
-      } catch (e) { urls.push(null); $('pmsg').textContent = 'Not found: ' + CONFIG.videos[i]; }
-    }
-    loaded = true; btn.disabled = false;
-  }
-  enter();
-};
+  btn.disabled = true;
+  btn.textContent = 'LOADING…';
+  $('pmsg').textContent = 'Preparing the montage…';
 
+  startupPromise = (async () => {
+    // Use the original video URL directly. Avoid downloading a second full copy
+    // into a Blob, which can stall or consume extra memory on some devices.
+    urls = CONFIG.videos.slice();
+    if (urls.length) {
+      vid.pause();
+      vid.src = urls[0];
+      vid.preload = 'auto';
+      vid.load();
+
+      // Wait briefly for the browser to recognise the video, but never trap
+      // the ENTER button indefinitely if the network is slow.
+      await new Promise(resolve => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          vid.removeEventListener('loadedmetadata', done);
+          vid.removeEventListener('canplay', done);
+          vid.removeEventListener('error', done);
+          clearTimeout(fallback);
+          resolve();
+        };
+        const fallback = setTimeout(done, 9000);
+        vid.addEventListener('loadedmetadata', done, { once: true });
+        vid.addEventListener('canplay', done, { once: true });
+        vid.addEventListener('error', done, { once: true });
+        if (vid.readyState >= 1) done();
+      });
+    }
+    await enter();
+  })();
+
+  try {
+    await startupPromise;
+  } catch (err) {
+    console.error('Startup error:', err);
+    $('pmsg').textContent = 'Could not prepare the video. Please tap ENTER to try again.';
+  } finally {
+    startupPromise = null;
+    btn.disabled = false;
+    btn.textContent = 'ENTER';
+  }
+};
 async function enter() {
   try { await document.documentElement.requestFullscreen(); } catch (e) {}
   // Begin in landscape; the scanner requests portrait when it opens.
@@ -112,13 +147,31 @@ function trigger() {
 }
 function playFrom(i) {
   waitingForLandscape = false;
+  $('orientationWarning').classList.remove('visible');
+  $('orientationWarning').setAttribute('aria-hidden', 'true');
   enforceOrientationImpl();
   while (i < urls.length && !urls[i]) i++;
   if (i >= urls.length) return finish();
-  state = 'play'; show('none');
-  vid.onended = vid.onerror = () => playFrom(i + 1);
-  vid.src = urls[i]; vid.classList.add('on');
-  vid.play().catch(() => {});                  // if blocked, tap the screen to resume
+
+  state = 'play';
+  show('none');
+  vid.onended = () => playFrom(i + 1);
+  vid.onerror = () => {
+    console.warn('Video could not be played:', urls[i]);
+    playFrom(i + 1);
+  };
+  if (vid.src !== new URL(urls[i], document.baseURI).href) {
+    vid.src = urls[i];
+    vid.load();
+  }
+  vid.classList.add('on');
+  const playAttempt = vid.play();
+  if (playAttempt && playAttempt.catch) {
+    playAttempt.catch(err => {
+      console.warn('Playback needs a user tap:', err);
+      // Keep the video screen active; the existing tap-to-resume handler retries.
+    });
+  }
 }
 function finish() { vid.classList.remove('on'); state = 'end'; show('end'); }
 
