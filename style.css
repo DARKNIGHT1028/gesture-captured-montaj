@@ -60,3 +60,6 @@ button:disabled{opacity:.5}
 #orientationWarning h2{font-size:clamp(1.2rem,4vw,2rem);line-height:1.35;margin:0 0 14px}
 #orientationWarning p{color:var(--fg);font-size:clamp(1rem,2.6vw,1.25rem);line-height:1.5;margin:8px 0}
 #orientationWarning .orientation-hint{color:var(--mut);font-size:.95rem}
+/* Duplicate desktop test shortcut inside the orientation overlay so it remains reachable when the overlay covers the scanner. */
+.desktop-skip{display:none;margin-top:22px}
+@media (hover:hover) and (pointer:fine){.desktop-skip{display:inline-flex;align-items:center;justify-content:center}}
