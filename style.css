@@ -30,6 +30,11 @@ button:disabled{opacity:.5}
 #vid.on{opacity:1}
 #end{z-index:6;padding:0;background:#030818;overflow:hidden}
 #end img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;pointer-events:none;transform:scale(1);transform-origin:center;will-change:transform}
+#endVideo{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:contain;background:#030818;opacity:0;pointer-events:none}
+#end.video-active img{opacity:0;visibility:hidden;animation:none}
+#end.video-active #endVideo{opacity:1;pointer-events:auto}
+#endVideoHint{position:absolute;z-index:4;left:50%;bottom:24px;transform:translateX(-50%);max-width:90%;padding:10px 16px;border-radius:24px;background:rgba(3,8,24,.72);color:#d9f3ff;font-size:14px;letter-spacing:.04em;text-align:center;pointer-events:none}
+#endVideoHint:empty{display:none}
 #end.on img{animation:posterReveal 2s cubic-bezier(.2,.7,.2,1) both,posterDrift 18s ease-in-out 2s infinite alternate}
 #end::before{content:"";position:absolute;inset:-18%;z-index:2;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,rgba(105,205,255,.14),transparent 52%),radial-gradient(ellipse at 50% 100%,rgba(255,220,150,.09),transparent 55%);opacity:0}
 #end.on::before{animation:posterGlow 7s ease-in-out 1.8s infinite alternate}

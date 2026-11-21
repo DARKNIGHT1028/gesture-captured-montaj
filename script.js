@@ -83,6 +83,12 @@ async function enter() {
 }
 function resetHand() {
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
+  finalVideoStarted = false;
+  endVideo.pause();
+  endVideo.removeAttribute('src');
+  endVideo.load();
+  $('end').classList.remove('video-active');
+  $('endVideoHint').textContent = '';
   vid.pause(); vid.classList.remove('on'); $('hand').classList.remove('locked');
   prevOn = new Set(); fps.forEach((f, i) => setFp(i, '', 'Loading…')); $('cnt').textContent = '0 / 5';
   state = 'hand'; show('hand'); enforceOrientationImpl();
@@ -173,7 +179,62 @@ function playFrom(i) {
     });
   }
 }
-function finish() { vid.classList.remove('on'); state = 'end'; show('end'); }
+function finish() {
+  vid.pause();
+  vid.classList.remove('on');
+  state = 'end';
+  show('end');
+  startFinalPresentation();
+}
+
+const endVideo = $('endVideo');
+const FINAL_VIDEO = 'video/majlis-animated-electronic-sound.mp4';
+let finalVideoStarted = false;
+function startFinalPresentation() {
+  if (finalVideoStarted) return;
+  finalVideoStarted = true;
+  $('end').classList.remove('video-active');
+  $('endVideoHint').textContent = 'Loading final presentation…';
+  endVideo.pause();
+  endVideo.src = FINAL_VIDEO;
+  endVideo.currentTime = 0;
+  endVideo.onloadedmetadata = async () => {
+    const startAt = Math.min(10, Math.max(0, endVideo.duration - 0.25));
+    try { endVideo.currentTime = startAt; } catch (e) {}
+    try {
+      await endVideo.play();
+      $('end').classList.add('video-active');
+      $('endVideoHint').textContent = '';
+    } catch (err) {
+      $('endVideoHint').textContent = 'Tap to play the final presentation';
+    }
+  };
+  endVideo.oncanplay = () => {
+    if (endVideo.currentTime < 9.9) {
+      try { endVideo.currentTime = Math.min(10, Math.max(0, endVideo.duration - 0.25)); } catch (e) {}
+    }
+  };
+  endVideo.onended = () => {
+    endVideo.pause(); // Hold on the final frame after the animated presentation.
+    $('endVideoHint').textContent = '';
+  };
+  endVideo.onerror = () => {
+    $('endVideoHint').textContent = 'Final video could not load. Showing the original poster.';
+    $('end').classList.remove('video-active');
+  };
+  endVideo.load();
+}
+endVideo.addEventListener('click', async () => {
+  if (state !== 'end') return;
+  try {
+    if (endVideo.currentTime < 10) endVideo.currentTime = 10;
+    await endVideo.play();
+    $('end').classList.add('video-active');
+    $('endVideoHint').textContent = '';
+  } catch (e) {
+    $('endVideoHint').textContent = 'Tap to play the final presentation';
+  }
+});
 
 /* ---- Desktop test shortcut ---- */
 // The skip button is available on desktop browsers only (CSS pointer/hover check).
