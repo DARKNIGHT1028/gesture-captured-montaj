@@ -75,3 +75,10 @@ button:disabled{opacity:.5}
 /* Duplicate desktop test shortcut inside the orientation overlay so it remains reachable when the overlay covers the scanner. */
 .desktop-skip{display:none;margin-top:22px;position:relative;z-index:21;pointer-events:auto}
 @media (hover:hover), (pointer:fine){.desktop-skip{display:inline-flex;align-items:center;justify-content:center}}
+
+/* Desktop-only video skip control */
+#skipVideo{display:none;position:fixed;z-index:20;right:28px;bottom:26px;padding:13px 20px;border:1px solid rgba(155,220,255,.65);border-radius:999px;background:rgba(4,18,38,.82);color:#e8f7ff;font:600 13px/1 system-ui,sans-serif;letter-spacing:.12em;cursor:pointer;box-shadow:0 5px 24px rgba(0,0,0,.35);backdrop-filter:blur(8px)}
+#skipVideo:not([hidden]){display:inline-flex;align-items:center;gap:12px}
+#skipVideo:hover{background:rgba(18,57,88,.95);border-color:#d7f2ff}
+#skipVideo span{font-size:19px;line-height:10px}
+@media (hover:none),(pointer:coarse){#skipVideo{display:none!important}}

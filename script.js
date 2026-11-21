@@ -13,6 +13,22 @@ const vid = $('vid'), pads = [...document.querySelectorAll('.pad')], fps = [...d
 let prevOn = new Set();
 function setFp(i, cls, txt) { fps[i].classList.remove('ok', 'err'); if (cls) fps[i].classList.add(cls); fps[i].querySelector('.lbl').textContent = txt; }
 let state = 'prep', urls = [], loaded = false, holdT = null, taps = 0, waitingForLandscape = false;
+let currentVideoIndex = 0;
+const skipVideoButton = $('skipVideo');
+const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+skipVideoButton.hidden = !desktopPointer.matches;
+desktopPointer.addEventListener?.('change', e => { skipVideoButton.hidden = !e.matches; });
+skipVideoButton.addEventListener('click', e => {
+  e.preventDefault(); e.stopPropagation();
+  if (state === 'play') playFrom(currentVideoIndex + 1);
+  else if (state === 'end') {
+    if (endVideo && Number.isFinite(endVideo.duration)) {
+      endVideo.currentTime = Math.max(0, endVideo.duration - 0.05);
+      endVideo.pause();
+    }
+    $('endVideoHint').textContent = '';
+  }
+});
 
 function show(id) {
   ['prep', 'hand', 'scan', 'end'].forEach(s =>
@@ -82,6 +98,8 @@ async function enter() {
   resetHand();
 }
 function resetHand() {
+  skipVideoButton.hidden = true;
+  currentVideoIndex = 0;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
   finalVideoStarted = false;
   endVideo.pause();
@@ -159,7 +177,9 @@ function playFrom(i) {
   while (i < urls.length && !urls[i]) i++;
   if (i >= urls.length) return finish();
 
+  currentVideoIndex = i;
   state = 'play';
+  skipVideoButton.hidden = !desktopPointer.matches;
   show('none');
   vid.onended = () => playFrom(i + 1);
   vid.onerror = () => {
@@ -183,6 +203,7 @@ function finish() {
   vid.pause();
   vid.classList.remove('on');
   state = 'end';
+  skipVideoButton.hidden = !desktopPointer.matches;
   show('end');
   startFinalPresentation();
 }
