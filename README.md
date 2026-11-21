@@ -1,15 +1,22 @@
 # TOUCH OF EXCELLENCE
 
-This repository is being updated from the supplied TOUCH-OF-EXCELLENCE project ZIP.
+An interactive, gesture-based digital presentation created for the **Touch of Excellence** event. The experience combines a cinematic video introduction, camera-based five-finger hand scanning, an animated scan sequence with sound, and a main presentation video leading into the Majlis Apresiasi finale.
 
-## Required project assets
+## Live Project
 
-Upload the two video files to these exact paths after the website files are published:
+🌐 **[Open Touch of Excellence](https://darknight1028.github.io/gesture-captured-montaj/)**
 
-- `videos/intro.mp4`
-- `videos/main.mp4`
+## Project Overview
 
-Other bundled assets used by the project:
+The website is designed as an immersive event presentation that can be displayed on a computer, tablet or large projector screen. Guests begin at the START screen, proceed through the video introduction and hand-scan interaction, then view the main video and closing Majlis Apresiasi presentation.
+
+## Experience Flow
+
+START page → intro video → five-finger hand scan → scan animation with audio → main video → animated Majlis Apresiasi slide.
+
+## Project Assets
+
+The project uses the following supporting assets:
 
 - `audio/scan.wav`
 - `images/crest.png`
@@ -21,10 +28,22 @@ Other bundled assets used by the project:
 - `fonts/Poppins-Medium.ttf`
 - `fonts/Poppins-Bold.ttf`
 
-The source project ZIP contains these assets. Keep the folder names and filenames exactly as shown because the HTML and CSS refer to them by relative path.
+## Video Files
 
-## Experience flow
+Upload the two video files to these exact paths:
 
-START page → intro video → five-finger hand scan → scan animation with audio → main video → animated Majlis Apresiasi slide.
+- `videos/intro.mp4`
+- `videos/main.mp4`
 
-For the ceremony, keep `testMode` disabled in `script.js`.
+Keep the folder names and filenames exactly as shown because the website references them using relative paths.
+
+## Setup Notes
+
+1. Upload all project source files and supporting assets while preserving the folder structure.
+2. Add the two video files to the `videos` folder using the filenames above.
+3. Open the GitHub Pages link to test the experience.
+4. For the ceremony, keep `testMode` disabled in `script.js`.
+
+---
+
+Made for the **Touch of Excellence** event.
