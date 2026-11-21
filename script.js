@@ -1,6 +1,6 @@
 /* ===== TOUCH OF EXCELLENCE – settings (edit here) ===== */
 const CONFIG = {
-  videos: ['video/montage-after-scan.mp4'], // plays after the scan; the Majlis slide appears when it ends
+  videos: ['video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4', 'video/montage-after-scan.mp4'], // sequential post-scan videos
   testMode: false,    // false = the five-finger scan is the ONLY way forward. true = show SKIP (TEST) button + keys t / r
   holdMs: 700,        // how long all five fingers must stay down
   scanMs: 4200,       // length of the scanning animation
@@ -9,10 +9,10 @@ const CONFIG = {
 };
 
 const $ = id => document.getElementById(id);
-const vid = $('vid'), pads = [...document.querySelectorAll('.pad')], fps = [...document.querySelectorAll('.fp')];
+const vid = $('vid'), intro = $('intro'), scanSound = $('scanSound'), pads = [...document.querySelectorAll('.pad')], fps = [...document.querySelectorAll('.fp')];
 let prevOn = new Set();
 function setFp(i, cls, txt) { fps[i].classList.remove('ok', 'err'); if (cls) fps[i].classList.add(cls); fps[i].querySelector('.lbl').textContent = txt; }
-let state = 'prep', urls = [], loaded = false, holdT = null, taps = 0, waitingForLandscape = false;
+let state = 'prep', urls = CONFIG.videos.slice(), loaded = true, holdT = null, taps = 0, waitingForLandscape = false;
 let currentVideoIndex = 0;
 const skipVideoButton = $('skipVideo');
 const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -35,66 +35,35 @@ function show(id) {
     $(s).classList.toggle('on', s === id || (id === 'scan' && s === 'hand')));
 }
 
-/* ---- Step 1: ENTER loads the video into memory (no buffering later), unlocks playback, opens the scanner ---- */
-let startupPromise = null;
+/* ---- Step 1: ENTER plays the intro; scanner opens after intro ends ---- */
+function beginScan() {
+  intro.pause();
+  intro.classList.remove('intro-playing');
+  enter();
+}
+intro.addEventListener('ended', beginScan);
+intro.addEventListener('error', beginScan);
 $('bEnter').onclick = async () => {
-  if (startupPromise) return; // Ignore rapid/repeated taps while startup is running.
+  if (state !== 'prep') return;
   const btn = $('bEnter');
   btn.disabled = true;
   btn.textContent = 'LOADING…';
-  $('pmsg').textContent = 'Preparing the montage…';
-
-  startupPromise = (async () => {
-    // Use the original video URL directly. Avoid downloading a second full copy
-    // into a Blob, which can stall or consume extra memory on some devices.
-    urls = CONFIG.videos.slice();
-    if (urls.length) {
-      vid.pause();
-      vid.src = urls[0];
-      vid.preload = 'auto';
-      vid.load();
-
-      // Wait briefly for the browser to recognise the video, but never trap
-      // the ENTER button indefinitely if the network is slow.
-      await new Promise(resolve => {
-        let settled = false;
-        const done = () => {
-          if (settled) return;
-          settled = true;
-          vid.removeEventListener('loadedmetadata', done);
-          vid.removeEventListener('canplay', done);
-          vid.removeEventListener('error', done);
-          clearTimeout(fallback);
-          resolve();
-        };
-        const fallback = setTimeout(done, 9000);
-        vid.addEventListener('loadedmetadata', done, { once: true });
-        vid.addEventListener('canplay', done, { once: true });
-        vid.addEventListener('error', done, { once: true });
-        if (vid.readyState >= 1) done();
-      });
-    }
-    await enter();
-  })();
-
-  try {
-    await startupPromise;
-  } catch (err) {
-    console.error('Startup error:', err);
-    $('pmsg').textContent = 'Could not prepare the video. Please tap ENTER to try again.';
-  } finally {
-    startupPromise = null;
-    btn.disabled = false;
-    btn.textContent = 'ENTER';
-  }
-};
-async function enter() {
   try { await document.documentElement.requestFullscreen(); } catch (e) {}
-  // Begin in landscape; the scanner requests portrait when it opens.
+  try { await navigator.wakeLock.request('screen'); } catch (e) {}
+  intro.currentTime = 0;
+  intro.classList.add('intro-playing');
+  const attempt = intro.play();
+  if (attempt && attempt.catch) attempt.catch(() => {
+    btn.disabled = false;
+    btn.textContent = 'PLAY INTRO';
+  });
+};
+document.addEventListener('click', () => {
+  if (state === 'prep' && intro.paused && intro.classList.contains('intro-playing')) intro.play().catch(() => {});
+});
+async function enter() {
   try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
   try { await navigator.wakeLock.request('screen'); } catch (e) {}
-  const first = urls.find(Boolean);           // unlock the video element inside this tap
-  if (first) { vid.src = first; vid.play().then(() => { vid.pause(); vid.currentTime = 0; }).catch(() => {}); }
   resetHand();
 }
 function resetHand() {
@@ -140,6 +109,7 @@ function evalTouches(touches) {
 function trigger() {
   if (state !== 'hand') return;
   holdT = null; state = 'scan';
+  try { scanSound.currentTime = 0; scanSound.play().catch(() => {}); } catch (e) {}
   $('hand').classList.add('locked'); fps.forEach((f, i) => setFp(i, 'ok', 'Confirmed')); show('scan');
   const L = CONFIG.lines, el = $('slines'); let i = 0; el.textContent = L[0];
   const iv = setInterval(() => { if (++i < L.length) el.textContent = L[i]; }, CONFIG.scanMs / L.length);
