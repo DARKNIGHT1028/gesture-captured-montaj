@@ -82,3 +82,7 @@ button:disabled{opacity:.5}
 #skipVideo:hover{background:rgba(18,57,88,.95);border-color:#d7f2ff}
 #skipVideo span{font-size:19px;line-height:10px}
 @media (hover:none),(pointer:coarse){#skipVideo{display:none!important}}
+
+/* Full-screen intro shown after ENTER */
+#intro{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;visibility:hidden;z-index:30}
+#intro.intro-playing{opacity:1;visibility:visible}
