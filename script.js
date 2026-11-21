@@ -220,7 +220,7 @@ function startFinalPresentation() {
   endVideo.src = FINAL_VIDEO;
   endVideo.currentTime = 0;
   endVideo.onloadedmetadata = async () => {
-    const startAt = Math.min(10, Math.max(0, endVideo.duration - 0.25));
+    const startAt = Math.min(1, Math.max(0, endVideo.duration - 0.25));
     try { endVideo.currentTime = startAt; } catch (e) {}
     try {
       await endVideo.play();
@@ -231,8 +231,8 @@ function startFinalPresentation() {
     }
   };
   endVideo.oncanplay = () => {
-    if (endVideo.currentTime < 9.9) {
-      try { endVideo.currentTime = Math.min(10, Math.max(0, endVideo.duration - 0.25)); } catch (e) {}
+    if (endVideo.currentTime < 0.9) {
+      try { endVideo.currentTime = Math.min(1, Math.max(0, endVideo.duration - 0.25)); } catch (e) {}
     }
   };
   endVideo.onended = () => {
@@ -248,7 +248,7 @@ function startFinalPresentation() {
 endVideo.addEventListener('click', async () => {
   if (state !== 'end') return;
   try {
-    if (endVideo.currentTime < 10) endVideo.currentTime = 10;
+    if (endVideo.currentTime < 1) endVideo.currentTime = 1;
     await endVideo.play();
     $('end').classList.add('video-active');
     $('endVideoHint').textContent = '';
