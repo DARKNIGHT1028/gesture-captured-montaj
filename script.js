@@ -142,7 +142,7 @@ if (ROLE === "display") {
   });
   panel.addEventListener("click", () => {
     if (!armed) return;
-    if (!displayVideo.paused && !finalVideo.paused) return;
+    if (!displayVideo.paused || !finalVideo.paused) return;
     if (pending && pending.stage === "presentation") {
       if (finalVideo.hidden) playVideo(0, pending.runId);
       else finalVideo.play().catch(() => showStatus("Tap again to play the final presentation"));
