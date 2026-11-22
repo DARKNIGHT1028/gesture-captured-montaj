@@ -114,3 +114,6 @@ body.display-mode>#scanSound,body.display-mode>#vid,body.display-mode>#skipVideo
 .display-gate-card h1{font-size:clamp(2rem,6vw,4.5rem);letter-spacing:.14em}
 .display-gate-card p{color:#8aa0c0;letter-spacing:.2em;margin:10px 0 30px}
 .display-gate-card small{display:block;color:#8aa0c0;margin-top:18px;letter-spacing:.04em}
+
+/* Compact playback permission control; keep the mirrored START/scanner visible behind it. */
+.display-gate-card h1{font-size:1rem;letter-spacing:.08em}.display-gate-card p{font-size:.75rem;margin:4px 0 8px;letter-spacing:.06em}.display-gate-card button{font-size:.7rem;padding:8px 12px;letter-spacing:.06em}.display-gate-card small{font-size:.65rem;margin-top:5px;letter-spacing:.02em}
