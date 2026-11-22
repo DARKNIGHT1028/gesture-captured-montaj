@@ -16,6 +16,31 @@ self.addEventListener("activate", event => {
     await self.clients.claim();
   })());
 });
+self.addEventListener("message", event => {
+  if (event.data?.type !== "CACHE_MEDIA") return;
+  const port = event.ports?.[0];
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    let done = 0;
+    for (const path of MEDIA_FILES) {
+      try {
+        const url = new URL(path, self.registration.scope).href;
+        const cached = await cache.match(url);
+        if (!cached) {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok || response.type === "opaque") throw new Error("HTTP " + response.status);
+          await cache.put(url, response);
+        }
+      } catch (error) {
+        port?.postMessage({ type: "progress", done, total: MEDIA_FILES.length, file: path, error: String(error) });
+        continue;
+      }
+      done++;
+      port?.postMessage({ type: "progress", done, total: MEDIA_FILES.length, file: path });
+    }
+    port?.postMessage({ type: "complete", done, total: MEDIA_FILES.length });
+  })());
+});
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
