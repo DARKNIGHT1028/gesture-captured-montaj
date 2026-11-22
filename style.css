@@ -105,7 +105,7 @@ button:disabled{opacity:.5}
 /* Two-device Firebase projector display */
 #displayScreen{display:none;position:fixed;inset:0;z-index:100;background:#000;color:#e8f1ff;align-items:center;justify-content:center;text-align:center}
 body.display-mode #displayScreen{display:flex}
-body.display-mode>.screen,body.display-mode>#intro,body.display-mode>#scanSound,body.display-mode>#vid,body.display-mode>#skipVideo,body.display-mode>#orientationWarning{display:none!important}
+body.display-mode>#scanSound,body.display-mode>#vid,body.display-mode>#skipVideo,body.display-mode>#orientationWarning{display:none!important}body.display-mode>#displayScreen{display:none!important}body.display-mode>#intro{z-index:40}
 #displayScreen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
 #displayStatus{position:absolute;z-index:2;left:5%;right:5%;top:50%;transform:translateY(-50%);font-size:clamp(1.2rem,3vw,2.5rem);letter-spacing:.08em;color:#dff7ff;text-shadow:0 0 24px rgba(80,220,255,.45)}
 #displayGate{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#0b1a33 0%,#04060d 70%);padding:24px}
