@@ -17,24 +17,46 @@ const firebaseAuth = getAuth(firebaseApp);
 const firebaseDb = getDatabase(firebaseApp);
 const ceremonyRef = ref(firebaseDb, "events/touch-of-excellence");
 let firebaseReady = false;
+let firebaseAuthError = null;
 try {
-  await signInAnonymously(firebaseAuth);
+  const credential = await signInAnonymously(firebaseAuth);
   firebaseReady = true;
+  console.info("Firebase anonymous sign-in succeeded. UID:", credential.user.uid);
 } catch (error) {
-  console.error("Firebase sign-in failed:", error);
+  firebaseAuthError = error;
+  console.error("Firebase sign-in failed:", error.code, error.message, error);
 }
 let ceremonyRunId = Date.now();
 async function publishStage(stage, videoIndex = 0) {
+  const message = document.getElementById(ROLE === "display" ? "displayStatus" : "pmsg");
   if (!firebaseReady) {
-    console.error("Firebase is not connected; stage update was not sent.");
-    const message = document.getElementById("pmsg");
-    if (message) message.textContent = "Connection to the projector is unavailable. Check Firebase Authentication and Database Rules.";
-    return;
+    const detail = firebaseAuthError ? ` (${firebaseAuthError.code || "auth-error"}: ${firebaseAuthError.message})` : "";
+    const text = "Firebase sign-in failed" + detail;
+    console.error(text);
+    if (message) message.textContent = text;
+    return false;
   }
   try {
-    await set(ceremonyRef, { stage, videoIndex, runId: ceremonyRunId, updatedAt: Date.now() });
+    await set(ceremonyRef, {
+      stage,
+      videoIndex,
+      runId: ceremonyRunId,
+      updatedAt: Date.now(),
+      source: ROLE,
+      project: firebaseConfig.projectId
+    });
+    console.info("Firebase database write succeeded:", stage, "at", ceremonyRef.toString());
+    if (message && ROLE === "controller") {
+      message.textContent = "Firebase connected ✓ Projector sync is ready.";
+    }
+    return true;
   } catch (error) {
-    console.error("Could not send stage update:", error);
+    const detail = `${error.code || "database-error"}: ${error.message || "Unknown database error"}`;
+    console.error("Firebase database write failed:", detail, error);
+    if (message) {
+      message.textContent = "DATABASE WRITE FAILED — " + detail;
+    }
+    return false;
   }
 }
 
@@ -149,12 +171,12 @@ if (ROLE === "display") {
     }
   });
   if (!firebaseReady) {
-    showStatus("Firebase sign-in failed. Enable Anonymous sign-in and check your database rules.");
+    showStatus(firebaseAuthError ? `Firebase sign-in failed — ${firebaseAuthError.code || "auth-error"}: ${firebaseAuthError.message}` : "Firebase sign-in failed. Check Authentication settings.");
     enable.disabled = true;
   } else {
     onValue(ceremonyRef, snapshot => handleStage(snapshot.val()), error => {
       console.error(error);
-      showStatus("Cannot connect to Firebase. Check your database rules and internet connection.");
+      showStatus(`DATABASE READ FAILED — ${error.code || "database-error"}: ${error.message || "Check database rules and URL"}`);
     });
   }
 } else {
@@ -443,7 +465,7 @@ enforceOrientationImpl();
 
   if (!firebaseReady) {
     $('bEnter').disabled = true;
-    $('pmsg').textContent = 'Firebase connection failed. Enable Anonymous sign-in and check your database rules before starting.';
+    $('pmsg').textContent = firebaseAuthError ? `Firebase sign-in failed — ${firebaseAuthError.code || "auth-error"}: ${firebaseAuthError.message}` : 'Firebase sign-in failed. Check Authentication settings.';
   } else {
     publishStage('waiting');
   }
