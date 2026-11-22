@@ -72,6 +72,31 @@ if (ROLE === "display") {
   const enable = document.getElementById("enableDisplay");
   const gate = document.getElementById("displayGate");
   const introSrc = "images/intro.mp4";
+  // Warm all presentation videos into this laptop's local browser cache.
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("./service-worker.js").then(async registration => {
+      await navigator.serviceWorker.ready;
+      const worker = registration.active || navigator.serviceWorker.controller;
+      if (!worker) return;
+      const channel = new MessageChannel();
+      channel.port1.onmessage = event => {
+        const data = event.data || {};
+        if (data.type === "progress") {
+          showStatus(data.error
+            ? "Offline cache could not save " + data.file + ". Keep a stable connection before the ceremony."
+            : "Preparing offline videos… " + data.done + "/" + data.total);
+        } else if (data.type === "complete") {
+          showStatus(data.done === data.total
+            ? "Videos saved on this laptop ✓ Ready for weak or disconnected internet."
+            : "Offline video cache incomplete (" + data.done + "/" + data.total + "). Keep internet available for missing videos.");
+        }
+      };
+      worker.postMessage({ type: "CACHE_MEDIA" }, [channel.port2]);
+    }).catch(error => {
+      console.warn("Offline media cache setup failed:", error);
+      showStatus("Offline video preparation unavailable. Check internet before the ceremony.");
+    });
+  }
   const videos = [
     "video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4",
     "video/montage-after-scan.mp4"
