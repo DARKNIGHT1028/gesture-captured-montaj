@@ -100,3 +100,17 @@ button:disabled{opacity:.5}
 @media (max-width:420px){
   #hand #tpl{max-width:98vw;height:min(70dvh,620px);max-height:70dvh}
 }
+
+
+/* Two-device Firebase projector display */
+#displayScreen{display:none;position:fixed;inset:0;z-index:100;background:#000;color:#e8f1ff;align-items:center;justify-content:center;text-align:center}
+body.display-mode #displayScreen{display:flex}
+body.display-mode>.screen,body.display-mode>#intro,body.display-mode>#scanSound,body.display-mode>#vid,body.display-mode>#skipVideo,body.display-mode>#orientationWarning{display:none!important}
+#displayScreen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+#displayStatus{position:absolute;z-index:2;left:5%;right:5%;top:50%;transform:translateY(-50%);font-size:clamp(1.2rem,3vw,2.5rem);letter-spacing:.08em;color:#dff7ff;text-shadow:0 0 24px rgba(80,220,255,.45)}
+#displayGate{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#0b1a33 0%,#04060d 70%);padding:24px}
+#displayGate[hidden]{display:none}
+.display-gate-card{max-width:760px}
+.display-gate-card h1{font-size:clamp(2rem,6vw,4.5rem);letter-spacing:.14em}
+.display-gate-card p{color:#8aa0c0;letter-spacing:.2em;margin:10px 0 30px}
+.display-gate-card small{display:block;color:#8aa0c0;margin-top:18px;letter-spacing:.04em}
