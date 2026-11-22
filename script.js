@@ -16,6 +16,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
 const firebaseDb = getDatabase(firebaseApp);
 const ceremonyRef = ref(firebaseDb, "events/touch-of-excellence");
+const projectorReadyRef = ref(firebaseDb, "events/touch-of-excellence/projectorReady");
 let firebaseReady = false;
 let firebaseAuthError = null;
 try {
@@ -197,6 +198,8 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "intro") {
+      const mirrorButton = document.getElementById("bEnter");
+      if (mirrorButton) { mirrorButton.classList.add("projector-pressed"); mirrorButton.textContent = "ENTER ✓"; }
       if (data.runId !== activeRun || !playing || pending?.stage !== "intro") {
         activeRun = data.runId;
         pending = data;
@@ -209,6 +212,8 @@ if (ROLE === "display") {
     if (data.stage === "introFinished") {
       if (data.runId === activeRun) {
         mirrorScreen("hand");
+        const mirrorButton = document.getElementById("bEnter");
+        if (mirrorButton) { mirrorButton.classList.remove("projector-pressed"); mirrorButton.textContent = "ENTER"; }
         playing = false;
         displayVideo.pause();
         displayVideo.hidden = true;
@@ -236,8 +241,11 @@ if (ROLE === "display") {
 
   enable.addEventListener("click", async () => {
     try { await document.documentElement.requestFullscreen(); } catch (error) {}
+    try { await set(projectorReadyRef, { ready: true, updatedAt: Date.now() }); }
+    catch (error) { showStatus(`PROJECTOR READY SIGNAL FAILED — ${error.code || error.message}`); return; }
     armed = true;
     gate.hidden = true;
+    showStatus("Projector playback enabled. Waiting for the iPad…");
     if (pending && pending.stage === "intro") playIntro(pending.runId);
     else if (pending && pending.stage === "presentation") playVideo(Number(pending.videoIndex || 0), pending.runId);
     else if (!playing) showStatus("Projector connected. Waiting for the iPad…");
@@ -255,6 +263,7 @@ if (ROLE === "display") {
     showStatus(firebaseAuthError ? `Firebase sign-in failed — ${firebaseAuthError.code || "auth-error"}: ${firebaseAuthError.message}` : "Firebase sign-in failed. Check Authentication settings.");
     enable.disabled = true;
   } else {
+    set(projectorReadyRef, { ready: false, updatedAt: Date.now() }).catch(error => showStatus(`Could not reset projector readiness — ${error.code || error.message}`));
     onValue(ceremonyRef, snapshot => handleStage(snapshot.val()), error => {
       console.error(error);
       showStatus(`DATABASE READ FAILED — ${error.code || "database-error"}: ${error.message || "Check database rules and URL"}`);
@@ -307,7 +316,7 @@ function beginScan() {
 intro.addEventListener('ended', beginScan);
 intro.addEventListener('error', beginScan);
 $('bEnter').onclick = async () => {
-  if (state !== 'prep') return;
+  if (state !== 'prep' || (ROLE === "controller" && $('bEnter').disabled)) return;
   if (ROLE === 'controller') await publishStage('intro');
   const btn = $('bEnter');
   btn.disabled = true;
@@ -555,6 +564,16 @@ enforceOrientationImpl();
     $('bEnter').disabled = true;
     $('pmsg').textContent = firebaseAuthError ? `Firebase sign-in failed — ${firebaseAuthError.code || "auth-error"}: ${firebaseAuthError.message}` : 'Firebase sign-in failed. Check Authentication settings.';
   } else {
+    const enterButton = $('bEnter');
+    enterButton.disabled = true;
+    $('pmsg').textContent = "Waiting for laptop to enable projector playback…";
+    onValue(projectorReadyRef, snapshot => {
+      const value = snapshot.val();
+      const ready = value === true || value?.ready === true;
+      enterButton.disabled = !ready;
+      if (ready && state === "prep") $('pmsg').textContent = "Projector ready ✓ You can press ENTER.";
+      else if (!ready && state === "prep") $('pmsg').textContent = "Waiting for laptop to enable projector playback…";
+    }, error => { $('pmsg').textContent = `PROJECTOR READY CHECK FAILED — ${error.code || error.message}`; });
     publishStage('waiting');
     onValue(ceremonyRef, snapshot => {
       const data = snapshot.val();
