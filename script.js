@@ -205,6 +205,7 @@ intro.addEventListener('ended', beginScan);
 intro.addEventListener('error', beginScan);
 $('bEnter').onclick = async () => {
   if (state !== 'prep') return;
+  if (ROLE === 'controller') await publishStage('intro');
   const btn = $('bEnter');
   btn.disabled = true;
   btn.textContent = 'LOADING…';
@@ -227,6 +228,7 @@ async function enter() {
   resetHand();
 }
 function resetHand() {
+  if (ROLE === 'controller') publishStage('waiting');
   skipVideoButton.hidden = true;
   currentVideoIndex = 0;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
@@ -269,6 +271,7 @@ function evalTouches(touches) {
 function trigger() {
   if (state !== 'hand') return;
   holdT = null; state = 'scan';
+  if (ROLE === 'controller') publishStage('scanning');
   try { scanSound.currentTime = 0; scanSound.play().catch(() => {}); } catch (e) {}
   $('hand').classList.add('locked'); fps.forEach((f, i) => setFp(i, 'ok', 'Confirmed')); show('scan');
   const L = CONFIG.lines, el = $('slines'); let i = 0; el.textContent = L[0];
@@ -309,8 +312,13 @@ function playFrom(i) {
 
   currentVideoIndex = i;
   state = 'play';
-  skipVideoButton.hidden = !desktopPointer.matches;
+  skipVideoButton.hidden = true;
   show('none');
+  // The iPad is only the controller. The projector device owns all video playback.
+  if (ROLE === 'controller') {
+    publishStage('presentation', i);
+    return;
+  }
   vid.onended = () => playFrom(i + 1);
   vid.onerror = () => {
     console.warn('Video could not be played:', urls[i]);
@@ -433,4 +441,10 @@ window.addEventListener('orientationchange', enforceOrientationImpl);
 if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', enforceOrientationImpl);
 enforceOrientationImpl();
 
+  if (!firebaseReady) {
+    $('bEnter').disabled = true;
+    $('pmsg').textContent = 'Firebase connection failed. Enable Anonymous sign-in and check your database rules before starting.';
+  } else {
+    publishStage('waiting');
+  }
 }
