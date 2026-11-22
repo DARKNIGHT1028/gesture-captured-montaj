@@ -1,49 +1,61 @@
 # TOUCH OF EXCELLENCE
 
-An interactive, gesture-based digital presentation created for the **Touch of Excellence** event. The experience combines a cinematic video introduction, camera-based five-finger hand scanning, an animated scan sequence with sound, and a main presentation video leading into the Majlis Apresiasi finale.
+An interactive, gesture-led ceremony presentation with a separate iPad controller and projector display. Firebase Realtime Database synchronizes the stage between both devices.
 
-## Live Project
+## Open the website
 
-🌐 **[Open Touch of Excellence](https://darknight1028.github.io/gesture-captured-montaj/)**
+- **iPad controller:** https://darknight1028.github.io/gesture-captured-montaj/
+- **Projector display:** https://darknight1028.github.io/gesture-captured-montaj/?role=display
 
-## Project Overview
+Open the controller URL on the iPad and the display URL on the laptop connected to the projector. On the laptop, click **ENABLE PROJECTOR PLAYBACK** once before the ceremony so the browser can allow video and sound.
 
-The website is designed as an immersive event presentation that can be displayed on a computer, tablet or large projector screen. Guests begin at the START screen, proceed through the video introduction and hand-scan interaction, then view the main video and closing Majlis Apresiasi presentation.
+## Ceremony flow
 
-## Experience Flow
+1. The iPad starts the intro video.
+2. The intro ends and the five-finger scan begins on the iPad.
+3. The iPad publishes the scan stage to Firebase.
+4. After the scan and landscape transition, the projector plays the two presentation videos in order.
+5. The projector plays the animated Majlis Apresiasi finale.
 
-START page → intro video → five-finger hand scan → scan animation with audio → main video → animated Majlis Apresiasi slide.
+The iPad is the controller; presentation videos play on the projector device only.
 
-## Project Assets
+## Firebase setup
 
-The project uses the following supporting assets:
+This project uses Firebase Realtime Database and Firebase Anonymous Authentication.
 
-- `audio/scan.wav`
-- `images/crest.png`
-- `images/date.png`
-- `images/majlis.png`
+1. In Firebase Console, open **Authentication → Sign-in method** and enable **Anonymous**.
+2. In **Realtime Database → Rules**, use the following authenticated-only baseline rules:
+
+```json
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}
+```
+
+3. Publish the rules. Both devices sign in anonymously before reading or writing the ceremony state.
+
+These rules prevent unauthenticated access, but anonymous sign-in is not a private event invitation system: anyone who can load the public website can create an anonymous session. For a public production deployment, add stronger access control (for example, authenticated operator accounts and restricted rules).
+
+## Project assets
+
+Keep the existing folder names and filenames unchanged:
+
+- `images/intro.mp4`
+- `images/scan.wav`
+- `video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4`
+- `video/montage-after-scan.mp4`
+- `video/majlis-animated-electronic-sound.mp4`
 - `images/poster.jpg`
-- `fonts/Poppins-Light.ttf`
-- `fonts/Poppins-Regular.ttf`
-- `fonts/Poppins-Medium.ttf`
-- `fonts/Poppins-Bold.ttf`
 
-## Video Files
+## Notes
 
-Upload the two video files to these exact paths:
-
-- `videos/intro.mp4`
-- `videos/main.mp4`
-
-Keep the folder names and filenames exactly as shown because the website references them using relative paths.
-
-## Setup Notes
-
-1. Upload all project source files and supporting assets while preserving the folder structure.
-2. Add the two video files to the `videos` folder using the filenames above.
-3. Open the GitHub Pages link to test the experience.
-4. For the ceremony, keep `testMode` disabled in `script.js`.
+- Both devices need an internet connection to synchronize through Firebase.
+- Keep the laptop awake and the projector page open during the ceremony.
+- Browser autoplay restrictions mean the projector needs one initial user click.
+- Test the full sequence on the actual iPad, laptop, browser, speakers and projector before the event.
 
 ---
-
 Made for the **Touch of Excellence** event.
