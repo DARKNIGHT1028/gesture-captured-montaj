@@ -339,7 +339,6 @@ async function enter() {
   resetHand();
 }
 function resetHand() {
-  if (ROLE === 'controller') publishStage('waiting');
   skipVideoButton.hidden = true;
   currentVideoIndex = 0;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
