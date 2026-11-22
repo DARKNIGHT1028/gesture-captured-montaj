@@ -97,6 +97,12 @@
     <button id="skipOverlay" class="test desktop-skip">SKIP (TEST)</button>
   </div>
 </div>
-<script src="script.js"></script>
+<section id="displayScreen" aria-label="Projector display">
+  <video id="displayVideo" playsinline preload="auto" hidden></video>
+  <video id="displayFinalVideo" playsinline preload="auto" hidden></video>
+  <div id="displayStatus">Waiting for the iPad controller…</div>
+  <div id="displayGate"><div class="display-gate-card"><h1>TOUCH OF EXCELLENCE</h1><p>Projector display</p><button id="enableDisplay">ENABLE PROJECTOR PLAYBACK</button><small>Click once to allow video and sound.</small></div></div>
+</section>
+<script type="module" src="script.js"></script>
 </body>
 </html>
