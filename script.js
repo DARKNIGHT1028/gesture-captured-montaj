@@ -86,6 +86,12 @@ if (ROLE === "display") {
     status.hidden = false;
   }
   function hideStatus() { status.hidden = true; }
+  function mirrorScreen(screenName) {
+    ["prep", "hand", "scan", "end"].forEach(name => {
+      const el = document.getElementById(name);
+      if (el) el.classList.toggle("on", name === screenName);
+    });
+  }
 
   async function reportIntroFinished(runId) {
     try {
@@ -104,6 +110,7 @@ if (ROLE === "display") {
   }
   async function playIntro(runId) {
     if (!armed || runId !== activeRun) return;
+    mirrorScreen(null);
     playing = true;
     pending = { stage: "intro", runId };
     finalVideo.pause();
@@ -133,6 +140,7 @@ if (ROLE === "display") {
   }
   async function playFinal() {
     playing = true;
+    mirrorScreen(null);
     displayVideo.pause();
     displayVideo.hidden = true;
     finalVideo.hidden = false;
@@ -184,6 +192,7 @@ if (ROLE === "display") {
       finalVideo.pause();
       displayVideo.hidden = true;
       finalVideo.hidden = true;
+      mirrorScreen("prep");
       showStatus("Waiting for the iPad controller…");
       return;
     }
@@ -199,6 +208,7 @@ if (ROLE === "display") {
     }
     if (data.stage === "introFinished") {
       if (data.runId === activeRun) {
+        mirrorScreen("hand");
         playing = false;
         displayVideo.pause();
         displayVideo.hidden = true;
@@ -207,11 +217,15 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "scanning") {
-      if (data.runId === activeRun) showStatus("Five-finger scan in progress on the iPad…");
+      if (data.runId === activeRun) {
+        mirrorScreen("scan");
+        showStatus("Five-finger scan in progress…");
+      }
       return;
     }
     if (data.stage === "presentation") {
       if (data.runId !== activeRun || !playing) {
+        mirrorScreen(null);
         activeRun = data.runId;
         pending = data;
         if (armed) playVideo(Number(data.videoIndex || 0), data.runId);
