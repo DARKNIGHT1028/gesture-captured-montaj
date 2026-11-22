@@ -70,6 +70,7 @@ if (ROLE === "display") {
   const finalVideo = document.getElementById("displayFinalVideo");
   const enable = document.getElementById("enableDisplay");
   const gate = document.getElementById("displayGate");
+  const introSrc = "images/intro.mp4";
   const videos = [
     "video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4",
     "video/montage-after-scan.mp4"
@@ -86,40 +87,88 @@ if (ROLE === "display") {
   }
   function hideStatus() { status.hidden = true; }
 
+  async function reportIntroFinished(runId) {
+    try {
+      await set(ceremonyRef, {
+        stage: "introFinished",
+        videoIndex: 0,
+        runId,
+        updatedAt: Date.now(),
+        source: "display",
+        project: firebaseConfig.projectId
+      });
+    } catch (error) {
+      console.error("Could not report intro completion:", error.code, error.message);
+      showStatus("Intro finished, but the iPad could not be notified. Check database write permissions.");
+    }
+  }
+  async function playIntro(runId) {
+    if (!armed || runId !== activeRun) return;
+    playing = true;
+    pending = { stage: "intro", runId };
+    finalVideo.pause();
+    finalVideo.hidden = true;
+    displayVideo.hidden = false;
+    displayVideo.onended = () => {
+      if (runId !== activeRun) return;
+      playing = false;
+      displayVideo.pause();
+      displayVideo.hidden = true;
+      showStatus("Intro complete. Starting five-finger scan on the iPad…");
+      reportIntroFinished(runId);
+    };
+    displayVideo.onerror = () => {
+      showStatus("INTRO VIDEO FAILED TO LOAD — check images/intro.mp4");
+      console.error("Could not load intro video:", introSrc, displayVideo.error);
+    };
+    displayVideo.src = introSrc;
+    displayVideo.load();
+    try {
+      await displayVideo.play();
+      hideStatus();
+    } catch (error) {
+      showStatus("Tap the screen to start the intro video");
+      console.error("Intro playback blocked:", error);
+    }
+  }
   async function playFinal() {
     playing = true;
     displayVideo.pause();
     displayVideo.hidden = true;
     finalVideo.hidden = false;
-    finalVideo.src = finalSrc;
-    finalVideo.currentTime = 0;
     finalVideo.onended = () => finalVideo.pause();
+    finalVideo.onerror = () => showStatus("FINAL VIDEO FAILED TO LOAD — check video/majlis-animated-electronic-sound.mp4");
+    finalVideo.src = finalSrc;
+    finalVideo.load();
     try {
       await finalVideo.play();
       hideStatus();
     } catch (error) {
       showStatus("Tap the screen to start the final presentation");
+      console.error("Final video playback blocked:", error);
     }
   }
   async function playVideo(index, runId) {
     if (!armed || runId !== activeRun) return;
     if (index >= videos.length) return playFinal();
     playing = true;
+    pending = { stage: "presentation", videoIndex: index, runId };
     finalVideo.pause();
     finalVideo.hidden = true;
     displayVideo.hidden = false;
-    displayVideo.src = videos[index];
-    displayVideo.currentTime = 0;
     displayVideo.onended = () => playVideo(index + 1, runId);
     displayVideo.onerror = () => {
-      console.error("Could not load presentation video:", videos[index]);
-      playVideo(index + 1, runId);
+      console.error("Could not load presentation video:", videos[index], displayVideo.error);
+      showStatus("MONTAGE VIDEO FAILED TO LOAD — check the video file path and format");
     };
+    displayVideo.src = videos[index];
+    displayVideo.load();
     try {
       await displayVideo.play();
       hideStatus();
     } catch (error) {
-      showStatus("Tap the screen to resume the presentation");
+      showStatus("Tap the screen to resume the montage");
+      console.error("Montage playback blocked:", error);
     }
   }
   function handleStage(data) {
@@ -129,6 +178,7 @@ if (ROLE === "display") {
     }
     if (data.stage === "waiting") {
       activeRun = data.runId;
+      pending = null;
       playing = false;
       displayVideo.pause();
       finalVideo.pause();
@@ -138,11 +188,26 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "intro") {
-      showStatus("The introduction is playing on the iPad…");
+      if (data.runId !== activeRun || !playing || pending?.stage !== "intro") {
+        activeRun = data.runId;
+        pending = data;
+        playing = false;
+        if (armed) playIntro(data.runId);
+        else showStatus("Ready. Enable projector playback to play the intro.");
+      }
+      return;
+    }
+    if (data.stage === "introFinished") {
+      if (data.runId === activeRun) {
+        playing = false;
+        displayVideo.pause();
+        displayVideo.hidden = true;
+        showStatus("Five-finger scan in progress on the iPad…");
+      }
       return;
     }
     if (data.stage === "scanning") {
-      showStatus("Five-finger scan in progress…");
+      if (data.runId === activeRun) showStatus("Five-finger scan in progress on the iPad…");
       return;
     }
     if (data.stage === "presentation") {
@@ -150,7 +215,7 @@ if (ROLE === "display") {
         activeRun = data.runId;
         pending = data;
         if (armed) playVideo(Number(data.videoIndex || 0), data.runId);
-        else showStatus("Ready. Enable projector playback to begin.");
+        else showStatus("Ready. Enable projector playback to begin the montage.");
       }
     }
   }
@@ -159,14 +224,16 @@ if (ROLE === "display") {
     try { await document.documentElement.requestFullscreen(); } catch (error) {}
     armed = true;
     gate.hidden = true;
-    if (pending && pending.stage === "presentation") playVideo(Number(pending.videoIndex || 0), pending.runId);
+    if (pending && pending.stage === "intro") playIntro(pending.runId);
+    else if (pending && pending.stage === "presentation") playVideo(Number(pending.videoIndex || 0), pending.runId);
     else if (!playing) showStatus("Projector connected. Waiting for the iPad…");
   });
   panel.addEventListener("click", () => {
     if (!armed) return;
     if (!displayVideo.paused || !finalVideo.paused) return;
-    if (pending && pending.stage === "presentation") {
-      if (finalVideo.hidden) playVideo(0, pending.runId);
+    if (pending && pending.stage === "intro") playIntro(pending.runId);
+    else if (pending && pending.stage === "presentation") {
+      if (finalVideo.hidden) playVideo(Number(pending.videoIndex || 0), pending.runId);
       else finalVideo.play().catch(() => showStatus("Tap again to play the final presentation"));
     }
   });
@@ -233,6 +300,14 @@ $('bEnter').onclick = async () => {
   btn.textContent = 'LOADING…';
   try { await document.documentElement.requestFullscreen(); } catch (e) {}
   try { await navigator.wakeLock.request('screen'); } catch (e) {}
+  if (ROLE === 'controller') {
+    intro.pause();
+    intro.classList.remove('intro-playing');
+    state = 'intro';
+    await publishStage('intro');
+    btn.textContent = 'INTRO PLAYING ON PROJECTOR';
+    return;
+  }
   intro.currentTime = 0;
   intro.classList.add('intro-playing');
   const attempt = intro.play();
@@ -468,5 +543,14 @@ enforceOrientationImpl();
     $('pmsg').textContent = firebaseAuthError ? `Firebase sign-in failed — ${firebaseAuthError.code || "auth-error"}: ${firebaseAuthError.message}` : 'Firebase sign-in failed. Check Authentication settings.';
   } else {
     publishStage('waiting');
+    onValue(ceremonyRef, snapshot => {
+      const data = snapshot.val();
+      if (data && data.stage === 'introFinished' && data.runId === ceremonyRunId && state === 'intro') {
+        beginScan();
+      }
+    }, error => {
+      console.error("Controller could not listen for intro completion:", error.code, error.message);
+      $('pmsg').textContent = `PROJECTOR SYNC ERROR — ${error.code || "database-error"}: ${error.message || "Unknown error"}`;
+    });
   }
 }
