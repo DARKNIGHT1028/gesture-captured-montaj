@@ -1,3 +1,163 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBMZ-C5iBo9goWwHbR9Yc2Zi160Q4LYTvM",
+  authDomain: "hand-gestured-synchronous.firebaseapp.com",
+  databaseURL: "https://hand-gestured-synchronous-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hand-gestured-synchronous",
+  storageBucket: "hand-gestured-synchronous.firebasestorage.app",
+  messagingSenderId: "391216540504",
+  appId: "1:391216540504:web:2857cf693a728aa0c1d32d",
+  measurementId: "G-YK5JMZNR8X"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const firebaseAuth = getAuth(firebaseApp);
+const firebaseDb = getDatabase(firebaseApp);
+const ceremonyRef = ref(firebaseDb, "events/touch-of-excellence");
+let firebaseReady = false;
+try {
+  await signInAnonymously(firebaseAuth);
+  firebaseReady = true;
+} catch (error) {
+  console.error("Firebase sign-in failed:", error);
+}
+let ceremonyRunId = Date.now();
+async function publishStage(stage, videoIndex = 0) {
+  if (!firebaseReady) {
+    console.error("Firebase is not connected; stage update was not sent.");
+    const message = document.getElementById("pmsg");
+    if (message) message.textContent = "Connection to the projector is unavailable. Check Firebase Authentication and Database Rules.";
+    return;
+  }
+  try {
+    await set(ceremonyRef, { stage, videoIndex, runId: ceremonyRunId, updatedAt: Date.now() });
+  } catch (error) {
+    console.error("Could not send stage update:", error);
+  }
+}
+
+const ROLE = new URLSearchParams(location.search).get("role") === "display" ? "display" : "controller";
+
+if (ROLE === "display") {
+  document.body.classList.add("display-mode");
+  const panel = document.getElementById("displayScreen");
+  const status = document.getElementById("displayStatus");
+  const displayVideo = document.getElementById("displayVideo");
+  const finalVideo = document.getElementById("displayFinalVideo");
+  const enable = document.getElementById("enableDisplay");
+  const gate = document.getElementById("displayGate");
+  const videos = [
+    "video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4",
+    "video/montage-after-scan.mp4"
+  ];
+  const finalSrc = "video/majlis-animated-electronic-sound.mp4";
+  let armed = false;
+  let pending = null;
+  let activeRun = null;
+  let playing = false;
+
+  function showStatus(message) {
+    status.textContent = message;
+    status.hidden = false;
+  }
+  function hideStatus() { status.hidden = true; }
+
+  async function playFinal() {
+    playing = true;
+    displayVideo.pause();
+    displayVideo.hidden = true;
+    finalVideo.hidden = false;
+    finalVideo.src = finalSrc;
+    finalVideo.currentTime = 0;
+    finalVideo.onended = () => finalVideo.pause();
+    try {
+      await finalVideo.play();
+      hideStatus();
+    } catch (error) {
+      showStatus("Tap the screen to start the final presentation");
+    }
+  }
+  async function playVideo(index, runId) {
+    if (!armed || runId !== activeRun) return;
+    if (index >= videos.length) return playFinal();
+    playing = true;
+    finalVideo.pause();
+    finalVideo.hidden = true;
+    displayVideo.hidden = false;
+    displayVideo.src = videos[index];
+    displayVideo.currentTime = 0;
+    displayVideo.onended = () => playVideo(index + 1, runId);
+    displayVideo.onerror = () => {
+      console.error("Could not load presentation video:", videos[index]);
+      playVideo(index + 1, runId);
+    };
+    try {
+      await displayVideo.play();
+      hideStatus();
+    } catch (error) {
+      showStatus("Tap the screen to resume the presentation");
+    }
+  }
+  function handleStage(data) {
+    if (!data) {
+      showStatus("Waiting for the iPad controller…");
+      return;
+    }
+    if (data.stage === "waiting") {
+      activeRun = data.runId;
+      playing = false;
+      displayVideo.pause();
+      finalVideo.pause();
+      displayVideo.hidden = true;
+      finalVideo.hidden = true;
+      showStatus("Waiting for the iPad controller…");
+      return;
+    }
+    if (data.stage === "intro") {
+      showStatus("The introduction is playing on the iPad…");
+      return;
+    }
+    if (data.stage === "scanning") {
+      showStatus("Five-finger scan in progress…");
+      return;
+    }
+    if (data.stage === "presentation") {
+      if (data.runId !== activeRun || !playing) {
+        activeRun = data.runId;
+        pending = data;
+        if (armed) playVideo(Number(data.videoIndex || 0), data.runId);
+        else showStatus("Ready. Enable projector playback to begin.");
+      }
+    }
+  }
+
+  enable.addEventListener("click", async () => {
+    try { await document.documentElement.requestFullscreen(); } catch (error) {}
+    armed = true;
+    gate.hidden = true;
+    if (pending && pending.stage === "presentation") playVideo(Number(pending.videoIndex || 0), pending.runId);
+    else if (!playing) showStatus("Projector connected. Waiting for the iPad…");
+  });
+  panel.addEventListener("click", () => {
+    if (!armed) return;
+    if (!displayVideo.paused && !finalVideo.paused) return;
+    if (pending && pending.stage === "presentation") {
+      if (finalVideo.hidden) playVideo(0, pending.runId);
+      else finalVideo.play().catch(() => showStatus("Tap again to play the final presentation"));
+    }
+  });
+  if (!firebaseReady) {
+    showStatus("Firebase sign-in failed. Enable Anonymous sign-in and check your database rules.");
+    enable.disabled = true;
+  } else {
+    onValue(ceremonyRef, snapshot => handleStage(snapshot.val()), error => {
+      console.error(error);
+      showStatus("Cannot connect to Firebase. Check your database rules and internet connection.");
+    });
+  }
+} else {
 /* ===== TOUCH OF EXCELLENCE – settings (edit here) ===== */
 const CONFIG = {
   videos: ['video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4', 'video/montage-after-scan.mp4'], // sequential post-scan videos
@@ -272,3 +432,5 @@ window.addEventListener('resize', enforceOrientationImpl, { passive: true });
 window.addEventListener('orientationchange', enforceOrientationImpl);
 if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', enforceOrientationImpl);
 enforceOrientationImpl();
+
+}
