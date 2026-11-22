@@ -117,3 +117,7 @@ body.display-mode>#scanSound,body.display-mode>#vid,body.display-mode>#skipVideo
 
 /* Compact playback permission control; keep the mirrored START/scanner visible behind it. */
 .display-gate-card h1{font-size:1rem;letter-spacing:.08em}.display-gate-card p{font-size:.75rem;margin:4px 0 8px;letter-spacing:.06em}.display-gate-card button{font-size:.7rem;padding:8px 12px;letter-spacing:.06em}.display-gate-card small{font-size:.65rem;margin-top:5px;letter-spacing:.02em}
+
+/* Visible press feedback on the mirrored ENTER button. */
+#bEnter.projector-pressed{transform:scale(.94);filter:brightness(1.55);box-shadow:0 0 0 5px rgba(125,255,160,.25),0 0 32px rgba(125,255,160,.8);border-color:#7dffa0;transition:transform .12s ease,filter .12s ease,box-shadow .12s ease}
+body.display-mode #bEnter{pointer-events:none}
