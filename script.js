@@ -113,6 +113,7 @@ if (ROLE === "display") {
   function setDisplayControls(mode) {
     const visible = armed && (mode === "scanning" || mode === "presentation");
     displayControls.hidden = !visible;
+    displayControls.setAttribute("aria-hidden", String(!visible));
     skipScanButton.hidden = !visible || mode !== "scanning";
     skipDisplayVideoButton.hidden = !visible || mode !== "presentation";
     panel.classList.toggle("controls-active", visible);
