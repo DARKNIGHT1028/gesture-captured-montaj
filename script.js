@@ -286,9 +286,10 @@ if (ROLE === "display") {
     if (data.stage === "scanning") {
       if (data.runId === activeRun) {
         displayStage = "scanning";
-        mirrorScreen("scan");
+        // Keep the hand and five finger indicators visible on the projector.
+        mirrorScreen("hand");
         setDisplayControls("scanning");
-        showStatus("Five-finger scan in progress…");
+        showStatus("LIVE SCAN — waiting for fingers…");
       }
       return;
     }
@@ -686,8 +687,15 @@ enforceOrientationImpl();
     publishStage('waiting');
     onValue(ceremonyRef, snapshot => {
       const data = snapshot.val();
-      if (data && data.stage === 'introFinished' && data.runId === ceremonyRunId && state === 'intro') {
+      if (!data || data.runId !== ceremonyRunId) return;
+      if (data.stage === 'introFinished' && state === 'intro') {
         beginScan();
+      } else if (data.stage === 'presentation' && data.source === 'display' && (state === 'hand' || state === 'scan')) {
+        // Projector operator skipped the physical scan: synchronize the iPad controller.
+        clearTimeout(holdT);
+        holdT = null;
+        state = 'play';
+        playFrom(Number(data.videoIndex || 0));
       }
     }, error => {
       console.error("Controller could not listen for intro completion:", error.code, error.message);
