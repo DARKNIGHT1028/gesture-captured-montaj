@@ -111,9 +111,11 @@ if (ROLE === "display") {
   let playing = false;
 
   function setDisplayControls(mode) {
-    displayControls.hidden = !armed || (mode !== "scanning" && mode !== "presentation");
-    skipScanButton.hidden = mode !== "scanning";
-    skipDisplayVideoButton.hidden = mode !== "presentation";
+    const visible = armed && (mode === "scanning" || mode === "presentation");
+    displayControls.hidden = !visible;
+    skipScanButton.hidden = !visible || mode !== "scanning";
+    skipDisplayVideoButton.hidden = !visible || mode !== "presentation";
+    panel.classList.toggle("controls-active", visible);
   }
   function showStatus(message) {
     status.textContent = message;
@@ -280,11 +282,20 @@ if (ROLE === "display") {
   skipScanButton.addEventListener("click", async event => {
     event.preventDefault(); event.stopPropagation();
     if (!armed || !activeRun) return;
+    const runId = activeRun;
+    pending = { stage: "presentation", videoIndex: 0, runId };
+    playing = true;
     setDisplayControls("presentation");
     try {
-      await set(ceremonyRef, { stage: "presentation", videoIndex: 0, runId: activeRun, updatedAt: Date.now(), source: "display", project: firebaseConfig.projectId });
-    } catch (error) { showStatus(`Could not skip scan — ${error.code || error.message}`); return; }
-    playVideo(0, activeRun);
+      await set(ceremonyRef, { stage: "presentation", videoIndex: 0, runId, updatedAt: Date.now(), source: "display", project: firebaseConfig.projectId });
+    } catch (error) {
+      playing = false;
+      pending = { stage: "scanning", runId };
+      setDisplayControls("scanning");
+      showStatus(`Could not skip scan — ${error.code || error.message}`);
+      return;
+    }
+    playVideo(0, runId);
   });
   skipDisplayVideoButton.addEventListener("click", event => {
     event.preventDefault(); event.stopPropagation();
