@@ -113,10 +113,22 @@ if (ROLE === "display") {
   let displayStage = "waiting";
   let latestRemoteScan = null;
   let displayScanTimers = [];
+  let scanAnimatingRunId = null;
   const displayScanLines = document.getElementById("slines");
   function startProjectorScanAnimation() {
+    if (scanAnimatingRunId === activeRun && document.getElementById("scan")?.classList.contains("on")) return;
+    scanAnimatingRunId = activeRun;
     displayScanTimers.forEach(clearTimeout);
     displayScanTimers = [];
+    const handEl = document.getElementById("hand");
+    if (handEl) handEl.classList.add("locked");
+    displayFingerIndicators.forEach(finger => {
+      finger.classList.remove("err");
+      finger.classList.add("ok");
+      const label = finger.querySelector(".lbl");
+      if (label) label.textContent = "Confirmed";
+    });
+    if (displayFingerCount) displayFingerCount.textContent = "5 / 5";
     mirrorScreen("scan");
     if (displayScanLines) displayScanLines.textContent = "SCANNING…";
     status.hidden = true;
@@ -142,12 +154,38 @@ if (ROLE === "display") {
   }
 
   function renderRemoteScanStatus(data) {
-    if (!data || data.runId !== activeRun || displayStage !== "scanning") return;
+    if (!data) return;
     latestRemoteScan = data;
+    const hasActiveScan = data.phase === "verifying" || data.phase === "complete" || Number(data.count) > 0;
+    if (displayStage !== "scanning") {
+      const canAdoptScan =
+        (data.runId === activeRun && (displayStage === "intro" || (displayStage === "waiting" && hasActiveScan))) ||
+        (!activeRun && hasActiveScan);
+      if (!canAdoptScan) return;
+      activeRun = data.runId;
+      displayStage = "scanning";
+      playing = false;
+      displayVideo.pause();
+      finalVideo.pause();
+      displayVideo.hidden = true;
+      finalVideo.hidden = true;
+      resetDisplayScanUI();
+      mirrorScreen("hand");
+      setDisplayControls("scanning");
+    } else if (data.runId !== activeRun) {
+      if (!hasActiveScan) return;
+      activeRun = data.runId;
+      scanAnimatingRunId = null;
+      resetDisplayScanUI();
+    }
     if (data.phase === "complete") {
       startProjectorScanAnimation();
       return;
     }
+    scanAnimatingRunId = null;
+    const handEl = document.getElementById("hand");
+    if (handEl) handEl.classList.remove("locked");
+    mirrorScreen("hand");
     const states = Array.isArray(data.fingers) ? data.fingers : [];
     displayFingerIndicators.forEach((finger, index) => {
       const state = states[index] || "waiting";
@@ -157,10 +195,10 @@ if (ROLE === "display") {
       const label = finger.querySelector(".lbl");
       if (label) label.textContent = state === "confirmed" ? "Confirmed" : state === "failed" ? "Not detected" : "Waiting…";
     });
-    if (displayFingerCount) displayFingerCount.textContent = (Number(data.count) || 0) + " / 5";
-    if (data.phase === "complete") showStatus("FIVE-FINGER SCAN COMPLETE ✓ 5 / 5");
-    else if (data.phase === "verifying") showStatus("Five fingers detected — verifying…");
-    else showStatus("LIVE SCAN — " + (Number(data.count) || 0) + " / 5 fingers detected");
+    const count = Number(data.count) || 0;
+    if (displayFingerCount) displayFingerCount.textContent = count + " / 5";
+    if (data.phase === "verifying") showStatus("Five fingers detected — verifying…");
+    else showStatus("LIVE SCAN — " + count + " / 5 fingers detected");
   }
 
   function setDisplayControls(mode) {
@@ -180,7 +218,7 @@ if (ROLE === "display") {
   function mirrorScreen(screenName) {
     ["prep", "hand", "scan", "end"].forEach(name => {
       const el = document.getElementById(name);
-      if (el) el.classList.toggle("on", name === screenName);
+      if (el) el.classList.toggle("on", name === screenName || (screenName === "scan" && name === "hand"));
     });
   }
 
@@ -298,6 +336,7 @@ if (ROLE === "display") {
     if (data.stage === "waiting") {
       displayStage = "waiting";
       latestRemoteScan = null;
+      scanAnimatingRunId = null;
       displayScanTimers.forEach(clearTimeout);
       displayScanTimers = [];
       activeRun = data.runId;
@@ -314,6 +353,8 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "intro") {
+      displayStage = "intro";
+      scanAnimatingRunId = null;
       const mirrorButton = document.getElementById("bEnter");
       if (mirrorButton) { mirrorButton.classList.add("projector-pressed"); mirrorButton.textContent = "ENTER ✓"; }
       if (data.runId !== activeRun || !playing || pending?.stage !== "intro") {
@@ -328,13 +369,15 @@ if (ROLE === "display") {
     if (data.stage === "introFinished") {
       if (data.runId === activeRun) {
         displayStage = "scanning";
+        scanAnimatingRunId = null;
         resetDisplayScanUI();
         mirrorScreen("hand");
         playing = false;
         displayVideo.pause();
         displayVideo.hidden = true;
         setDisplayControls("scanning");
-        showStatus("Five-finger scan in progress on the iPad…");
+        if (latestRemoteScan?.runId === activeRun) renderRemoteScanStatus(latestRemoteScan);
+        else showStatus("Five-finger scan in progress on the iPad…");
       }
       return;
     }
@@ -343,6 +386,7 @@ if (ROLE === "display") {
       if (data.runId !== activeRun) {
         activeRun = data.runId;
         latestRemoteScan = null;
+        scanAnimatingRunId = null;
         displayScanTimers.forEach(clearTimeout);
         displayScanTimers = [];
         playing = false;
@@ -352,16 +396,15 @@ if (ROLE === "display") {
         finalVideo.hidden = true;
         resetDisplayScanUI();
       }
-      // Mirror either the live hand or the cinematic access-granted scan animation.
-      if (latestRemoteScan?.runId === data.runId && latestRemoteScan.phase === "complete") {
-        startProjectorScanAnimation();
+      setDisplayControls("scanning");
+      if (latestRemoteScan?.runId === activeRun) {
+        renderRemoteScanStatus(latestRemoteScan);
       } else {
         const handEl = document.getElementById("hand");
         if (handEl) handEl.classList.remove("locked");
         mirrorScreen("hand");
         showStatus("LIVE SCAN — waiting for fingers…");
       }
-      setDisplayControls("scanning");
       return;
     }
     if (data.stage === "presentation") {
@@ -525,10 +568,8 @@ async function enter() {
 function resetHand({ newRun = false } = {}) {
   skipVideoButton.hidden = true;
   lastScanSignature = "";
-  if (newRun) {
-    ceremonyRunId = Date.now();
-    publishStage('scanning');
-  }
+  if (newRun) ceremonyRunId = Date.now();
+  if (ROLE === 'controller') publishStage('scanning');
   publishLiveScan(["waiting", "waiting", "waiting", "waiting", "waiting"], "scanning");
   currentVideoIndex = 0;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}

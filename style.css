@@ -88,16 +88,16 @@ button:disabled{opacity:.5}
 #intro.intro-playing{opacity:1;visibility:visible}
 
 /* Larger, responsive hand target for a wider range of hand sizes */
-#hand{gap:clamp(4px,1.2vh,14px);padding:clamp(10px,2.2vh,24px)}
+#hand{gap:clamp(6px,1.4vh,14px);padding:clamp(10px,2.2vh,24px)}
 #hand h2{width:100%;max-width:900px;margin:0 0 clamp(2px,1vh,10px);font-size:clamp(1rem,2.8vh,1.8rem);letter-spacing:clamp(.04em,.12vw,.16em)}
-#hand #tpl{height:min(74dvh,760px);max-height:74dvh;max-width:96vw;width:auto;flex:0 1 auto;overflow:visible}
+#hand #tpl{width:min(94vw,calc(74dvh * 480 / 452),760px);height:auto;aspect-ratio:480 / 452;flex:0 0 auto;overflow:visible}
 #hand #cnt{font-size:clamp(1rem,2.8vh,1.4rem);margin:clamp(2px,.8vh,10px) 0 0}
 #hand .pad{pointer-events:all}
 @media (max-height:700px){
-  #hand #tpl{height:min(68dvh,620px);max-height:68dvh}
+  #hand #tpl{width:min(94vw,calc(68dvh * 480 / 452),760px)}
 }
 @media (max-width:420px){
-  #hand #tpl{max-width:98vw;height:min(70dvh,620px);max-height:70dvh}
+  #hand #tpl{width:min(96vw,calc(68dvh * 480 / 452))}
 }
 
 /* Two-device Firebase projector display */
@@ -127,9 +127,9 @@ body.display-mode #bEnter{pointer-events:none}
 #displayControls[hidden],#displayControls button[hidden]{display:none!important}
 
 /* Projector scan layout: keep counter, status, and controls cleanly separated */
-body.display-mode #hand{box-sizing:border-box;justify-content:flex-start;gap:4px;padding:clamp(10px,2vh,20px) 22px 136px!important;overflow:hidden}
-body.display-mode #hand h2{flex:0 0 auto;margin:4px 0 2px;font-size:clamp(1rem,2.1vw,1.65rem);line-height:1.25}
-body.display-mode #hand #tpl{display:block;flex:1 1 auto;min-height:0;height:auto!important;max-height:min(58vh,660px)!important;max-width:min(94vw,760px);width:auto}
+body.display-mode #hand{box-sizing:border-box;justify-content:center;gap:clamp(4px,1vh,10px);padding:clamp(10px,2vh,20px) 22px 136px!important;overflow:hidden}
+body.display-mode #hand h2{flex:0 0 auto;margin:0;font-size:clamp(1rem,2.1vw,1.65rem);line-height:1.25}
+body.display-mode #hand #tpl{display:block;flex:0 0 auto;min-height:0;width:min(92vw,calc(58vh * 480 / 452),660px)!important;height:auto!important;aspect-ratio:480 / 452}
 body.display-mode #hand #cnt{display:block!important;flex:0 0 auto;opacity:1;margin:2px 0 0;padding:2px 12px;font-size:clamp(1.1rem,2vw,1.55rem);line-height:1.2;color:#dff7ff;text-shadow:0 0 14px rgba(80,220,255,.35);transition:opacity .25s ease}
 body.display-mode #hand.locked #cnt{opacity:0!important}
 body.display-mode #scan #slines{bottom:clamp(140px,16vh,180px);z-index:4;width:100%;padding:0 16px;box-sizing:border-box;font-size:clamp(1.4rem,4vw,3rem);letter-spacing:.18em}
