@@ -278,3 +278,26 @@ body.display-mode #scan #slines {
   font-size:clamp(1.4rem,4vw,3rem);
   letter-spacing:.18em;
 }
+
+
+/* ===== Touch of Excellence glass-button UI ===== */
+button,#skipVideo,#displayControls button,.display-gate-card button{
+  font-family:inherit;font-weight:300;text-transform:uppercase;letter-spacing:.28em;color:#eaf8ff;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.02));
+  border:1px solid rgba(180,235,255,.32);border-radius:999px;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 22px rgba(80,220,255,.10);
+  text-shadow:0 0 12px rgba(80,220,255,.35);
+  transition:border-color .3s,box-shadow .3s,background .3s,transform .15s,letter-spacing .3s}
+button{font-size:.95rem;padding:15px 48px;min-height:50px}
+button:hover,#skipVideo:hover,#displayControls button:hover{
+  border-color:rgba(200,245,255,.8);letter-spacing:.32em;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(80,220,255,.06));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 30px rgba(80,220,255,.28)}
+button:active,#skipVideo:active,#displayControls button:active{transform:scale(.97);background:rgba(80,220,255,.16)}
+button:focus-visible{outline:1px solid rgba(200,245,255,.9);outline-offset:4px}
+button:disabled{opacity:.4;box-shadow:none}
+.test,.display-gate-card button{font-size:.72rem;padding:10px 26px;min-height:40px;letter-spacing:.22em}
+#skipVideo{font-weight:400;font-size:.72rem;letter-spacing:.2em;padding:12px 22px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.02))}
+#displayControls{background:rgba(2,8,20,.55);border:1px solid rgba(180,235,255,.14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#displayControls button{font-weight:400;font-size:.75rem;letter-spacing:.2em;min-height:44px;min-width:140px;padding:11px 22px}
