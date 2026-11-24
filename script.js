@@ -16,6 +16,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
 const firebaseDb = getDatabase(firebaseApp);
 const ceremonyRef = ref(firebaseDb, "events/touch-of-excellence");
+const scanStatusRef = ref(firebaseDb, "events/touch-of-excellence/scanStatus");
 const projectorReadyRef = ref(firebaseDb, "events/touch-of-excellence/projectorReady");
 let firebaseReady = false;
 let firebaseAuthError = null;
@@ -109,6 +110,26 @@ if (ROLE === "display") {
   let pending = null;
   let activeRun = null;
   let playing = false;
+  let displayStage = "waiting";
+  const displayFingerIndicators = [...document.querySelectorAll("#hand .fp")];
+  const displayFingerCount = document.getElementById("cnt");
+
+  function renderRemoteScanStatus(data) {
+    if (!data || data.runId !== activeRun || displayStage !== "scanning") return;
+    const states = Array.isArray(data.fingers) ? data.fingers : [];
+    displayFingerIndicators.forEach((finger, index) => {
+      const state = states[index] || "waiting";
+      finger.classList.remove("ok", "err");
+      if (state === "confirmed") finger.classList.add("ok");
+      if (state === "failed") finger.classList.add("err");
+      const label = finger.querySelector(".lbl");
+      if (label) label.textContent = state === "confirmed" ? "Confirmed" : state === "failed" ? "Not detected" : "Waiting…";
+    });
+    if (displayFingerCount) displayFingerCount.textContent = (Number(data.count) || 0) + " / 5";
+    if (data.phase === "complete") showStatus("FIVE-FINGER SCAN COMPLETE ✓ 5 / 5");
+    else if (data.phase === "verifying") showStatus("Five fingers detected — verifying…");
+    else showStatus("LIVE SCAN — " + (Number(data.count) || 0) + " / 5 fingers detected");
+  }
 
   function setDisplayControls(mode) {
     const visible = armed && (mode === "scanning" || mode === "presentation");
@@ -223,6 +244,7 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "waiting") {
+      displayStage = "waiting";
       activeRun = data.runId;
       pending = null;
       playing = false;
@@ -249,6 +271,7 @@ if (ROLE === "display") {
     }
     if (data.stage === "introFinished") {
       if (data.runId === activeRun) {
+        displayStage = "scanning";
         mirrorScreen("hand");
         const mirrorButton = document.getElementById("bEnter");
         if (mirrorButton) { mirrorButton.classList.remove("projector-pressed"); mirrorButton.textContent = "ENTER"; }
@@ -262,6 +285,7 @@ if (ROLE === "display") {
     }
     if (data.stage === "scanning") {
       if (data.runId === activeRun) {
+        displayStage = "scanning";
         mirrorScreen("scan");
         setDisplayControls("scanning");
         showStatus("Five-finger scan in progress…");
@@ -269,6 +293,7 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "presentation") {
+      displayStage = "presentation";
       setDisplayControls("presentation");
       if (data.runId !== activeRun || !playing) {
         mirrorScreen(null);
@@ -332,6 +357,10 @@ if (ROLE === "display") {
       console.error(error);
       showStatus(`DATABASE READ FAILED — ${error.code || "database-error"}: ${error.message || "Check database rules and URL"}`);
     });
+    onValue(scanStatusRef, snapshot => renderRemoteScanStatus(snapshot.val()), error => {
+      console.error("Live scan status listener failed:", error);
+      showStatus(`LIVE SCAN SYNC FAILED — ${error.code || "database-error"}`);
+    });
   }
 } else {
 /* ===== TOUCH OF EXCELLENCE – settings (edit here) ===== */
@@ -348,8 +377,18 @@ const $ = id => document.getElementById(id);
 const vid = $('vid'), intro = $('intro'), scanSound = $('scanSound'), pads = [...document.querySelectorAll('.pad')], fps = [...document.querySelectorAll('.fp')];
 let prevOn = new Set();
 function setFp(i, cls, txt) { fps[i].classList.remove('ok', 'err'); if (cls) fps[i].classList.add(cls); fps[i].querySelector('.lbl').textContent = txt; }
+function publishLiveScan(fingers, phase = "scanning") {
+  if (ROLE !== "controller" || !firebaseReady) return;
+  const count = fingers.filter(value => value === "confirmed").length;
+  const signature = ceremonyRunId + "|" + phase + "|" + fingers.join(",");
+  if (signature === lastScanSignature) return;
+  lastScanSignature = signature;
+  set(scanStatusRef, { runId: ceremonyRunId, fingers, count, phase, updatedAt: Date.now(), source: "controller" })
+    .catch(error => console.error("Could not publish live scan status:", error.code, error.message));
+}
 let state = 'prep', urls = CONFIG.videos.slice(), loaded = true, holdT = null, taps = 0, waitingForLandscape = false;
 let currentVideoIndex = 0;
+let lastScanSignature = "";
 const skipVideoButton = $('skipVideo');
 const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
 skipVideoButton.hidden = !desktopPointer.matches;
@@ -413,6 +452,8 @@ async function enter() {
 }
 function resetHand() {
   skipVideoButton.hidden = true;
+  lastScanSignature = "";
+  publishLiveScan(["waiting", "waiting", "waiting", "waiting", "waiting"], "scanning");
   currentVideoIndex = 0;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
   finalVideoStarted = false;
@@ -441,6 +482,9 @@ function evalTouches(touches) {
   });
   prevOn = on;
   $('cnt').textContent = on.size + ' / 5';
+  const liveStates = pads.map((_, i) => on.has(i) ? "confirmed" : "waiting");
+  pads.forEach((_, i) => { if (!on.has(i) && fps[i].classList.contains("err")) liveStates[i] = "failed"; });
+  publishLiveScan(liveStates, on.size === 5 ? "verifying" : "scanning");
   if (on.size === 5) { if (!holdT) holdT = setTimeout(trigger, CONFIG.holdMs); }
   else { clearTimeout(holdT); holdT = null; }
 }
@@ -454,6 +498,7 @@ function evalTouches(touches) {
 function trigger() {
   if (state !== 'hand') return;
   holdT = null; state = 'scan';
+  publishLiveScan(["confirmed", "confirmed", "confirmed", "confirmed", "confirmed"], "complete");
   if (ROLE === 'controller') publishStage('scanning');
   try { scanSound.currentTime = 0; scanSound.play().catch(() => {}); } catch (e) {}
   $('hand').classList.add('locked'); fps.forEach((f, i) => setFp(i, 'ok', 'Confirmed')); show('scan');
