@@ -71,6 +71,9 @@ if (ROLE === "display") {
   const finalVideo = document.getElementById("displayFinalVideo");
   const enable = document.getElementById("enableDisplay");
   const gate = document.getElementById("displayGate");
+  const displayControls = document.getElementById("displayControls");
+  const skipScanButton = document.getElementById("displaySkipScan");
+  const skipDisplayVideoButton = document.getElementById("displaySkipVideo");
   const introSrc = "images/intro.mp4";
   // Warm all presentation videos into this laptop's local browser cache.
   if ("serviceWorker" in navigator && location.protocol === "https:") {
@@ -107,6 +110,11 @@ if (ROLE === "display") {
   let activeRun = null;
   let playing = false;
 
+  function setDisplayControls(mode) {
+    displayControls.hidden = !armed || (mode !== "scanning" && mode !== "presentation");
+    skipScanButton.hidden = mode !== "scanning";
+    skipDisplayVideoButton.hidden = mode !== "presentation";
+  }
   function showStatus(message) {
     status.textContent = message;
     status.hidden = false;
@@ -184,7 +192,8 @@ if (ROLE === "display") {
   }
   async function playVideo(index, runId) {
     if (!armed || runId !== activeRun) return;
-    if (index >= videos.length) return playFinal();
+    if (index >= videos.length) { setDisplayControls("end"); return playFinal(); }
+    setDisplayControls("presentation");
     playing = true;
     pending = { stage: "presentation", videoIndex: index, runId };
     finalVideo.pause();
@@ -219,6 +228,7 @@ if (ROLE === "display") {
       displayVideo.hidden = true;
       finalVideo.hidden = true;
       mirrorScreen("prep");
+      setDisplayControls("waiting");
       showStatus("Waiting for the iPad controller…");
       return;
     }
@@ -242,6 +252,7 @@ if (ROLE === "display") {
         playing = false;
         displayVideo.pause();
         displayVideo.hidden = true;
+        setDisplayControls("scanning");
         showStatus("Five-finger scan in progress on the iPad…");
       }
       return;
@@ -249,11 +260,13 @@ if (ROLE === "display") {
     if (data.stage === "scanning") {
       if (data.runId === activeRun) {
         mirrorScreen("scan");
+        setDisplayControls("scanning");
         showStatus("Five-finger scan in progress…");
       }
       return;
     }
     if (data.stage === "presentation") {
+      setDisplayControls("presentation");
       if (data.runId !== activeRun || !playing) {
         mirrorScreen(null);
         activeRun = data.runId;
@@ -264,6 +277,20 @@ if (ROLE === "display") {
     }
   }
 
+  skipScanButton.addEventListener("click", async event => {
+    event.preventDefault(); event.stopPropagation();
+    if (!armed || !activeRun) return;
+    setDisplayControls("presentation");
+    try {
+      await set(ceremonyRef, { stage: "presentation", videoIndex: 0, runId: activeRun, updatedAt: Date.now(), source: "display", project: firebaseConfig.projectId });
+    } catch (error) { showStatus(`Could not skip scan — ${error.code || error.message}`); return; }
+    playVideo(0, activeRun);
+  });
+  skipDisplayVideoButton.addEventListener("click", event => {
+    event.preventDefault(); event.stopPropagation();
+    if (!armed || !pending || pending.stage !== "presentation") return;
+    playVideo(Number(pending.videoIndex || 0) + 1, pending.runId);
+  });
   enable.addEventListener("click", async () => {
     try { await document.documentElement.requestFullscreen(); } catch (error) {}
     try { await set(projectorReadyRef, { ready: true, updatedAt: Date.now() }); }
