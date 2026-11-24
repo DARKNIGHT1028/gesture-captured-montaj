@@ -48,7 +48,7 @@ async function publishStage(stage, videoIndex = 0) {
       project: firebaseConfig.projectId
     });
     console.info("Firebase database write succeeded:", stage, "at", ceremonyRef.toString());
-    if (message && ROLE === "controller") {
+    if (message && ROLE === "controller" && stage === "waiting") {
       message.textContent = "Firebase connected ✓ Projector sync is ready.";
     }
     return true;
@@ -125,6 +125,21 @@ if (ROLE === "display") {
   }
   const displayFingerIndicators = [...document.querySelectorAll("#hand .fp")];
   const displayFingerCount = document.getElementById("cnt");
+  function resetDisplayScanUI() {
+    const handEl = document.getElementById("hand");
+    if (handEl) handEl.classList.remove("locked");
+    displayFingerIndicators.forEach(finger => {
+      finger.classList.remove("ok", "err");
+      const label = finger.querySelector(".lbl");
+      if (label) label.textContent = "Waiting…";
+    });
+    if (displayFingerCount) displayFingerCount.textContent = "0 / 5";
+    const mirrorButton = document.getElementById("bEnter");
+    if (mirrorButton) {
+      mirrorButton.classList.remove("projector-pressed");
+      mirrorButton.textContent = "ENTER";
+    }
+  }
 
   function renderRemoteScanStatus(data) {
     if (!data || data.runId !== activeRun || displayStage !== "scanning") return;
@@ -215,11 +230,24 @@ if (ROLE === "display") {
     }
   }
   async function playFinal() {
+    displayStage = "end";
     playing = true;
+    pending = { stage: "end", runId: activeRun };
+    hideStatus();
     mirrorScreen(null);
     displayVideo.pause();
     displayVideo.hidden = true;
     finalVideo.hidden = false;
+    if (activeRun) {
+      set(ceremonyRef, {
+        stage: "end",
+        videoIndex: videos.length,
+        runId: activeRun,
+        updatedAt: Date.now(),
+        source: "display",
+        project: firebaseConfig.projectId
+      }).catch(error => console.warn("Could not publish end stage:", error));
+    }
     finalVideo.onended = () => finalVideo.pause();
     finalVideo.onerror = () => showStatus("FINAL VIDEO FAILED TO LOAD — check video/majlis-animated-electronic-sound.mp4");
     finalVideo.src = finalSrc;
@@ -279,6 +307,7 @@ if (ROLE === "display") {
       finalVideo.pause();
       displayVideo.hidden = true;
       finalVideo.hidden = true;
+      resetDisplayScanUI();
       mirrorScreen("prep");
       setDisplayControls("waiting");
       showStatus("Waiting for the iPad controller…");
@@ -299,9 +328,8 @@ if (ROLE === "display") {
     if (data.stage === "introFinished") {
       if (data.runId === activeRun) {
         displayStage = "scanning";
+        resetDisplayScanUI();
         mirrorScreen("hand");
-        const mirrorButton = document.getElementById("bEnter");
-        if (mirrorButton) { mirrorButton.classList.remove("projector-pressed"); mirrorButton.textContent = "ENTER"; }
         playing = false;
         displayVideo.pause();
         displayVideo.hidden = true;
@@ -311,17 +339,29 @@ if (ROLE === "display") {
       return;
     }
     if (data.stage === "scanning") {
-      if (data.runId === activeRun) {
-        displayStage = "scanning";
-        // Mirror either the live hand or the cinematic access-granted scan animation.
-        if (latestRemoteScan?.runId === data.runId && latestRemoteScan.phase === "complete") {
-          startProjectorScanAnimation();
-        } else {
-          mirrorScreen("hand");
-          showStatus("LIVE SCAN — waiting for fingers…");
-        }
-        setDisplayControls("scanning");
+      displayStage = "scanning";
+      if (data.runId !== activeRun) {
+        activeRun = data.runId;
+        latestRemoteScan = null;
+        displayScanTimers.forEach(clearTimeout);
+        displayScanTimers = [];
+        playing = false;
+        displayVideo.pause();
+        finalVideo.pause();
+        displayVideo.hidden = true;
+        finalVideo.hidden = true;
+        resetDisplayScanUI();
       }
+      // Mirror either the live hand or the cinematic access-granted scan animation.
+      if (latestRemoteScan?.runId === data.runId && latestRemoteScan.phase === "complete") {
+        startProjectorScanAnimation();
+      } else {
+        const handEl = document.getElementById("hand");
+        if (handEl) handEl.classList.remove("locked");
+        mirrorScreen("hand");
+        showStatus("LIVE SCAN — waiting for fingers…");
+      }
+      setDisplayControls("scanning");
       return;
     }
     if (data.stage === "presentation") {
@@ -375,7 +415,7 @@ if (ROLE === "display") {
     if (!armed) return;
     if (!displayVideo.paused || !finalVideo.paused) return;
     if (pending && pending.stage === "intro") playIntro(pending.runId);
-    else if (pending && pending.stage === "presentation") {
+    else if (pending && (pending.stage === "presentation" || pending.stage === "end")) {
       if (finalVideo.hidden) playVideo(Number(pending.videoIndex || 0), pending.runId);
       else finalVideo.play().catch(() => showStatus("Tap again to play the final presentation"));
     }
@@ -452,7 +492,6 @@ intro.addEventListener('ended', beginScan);
 intro.addEventListener('error', beginScan);
 $('bEnter').onclick = async () => {
   if (state !== 'prep' || (ROLE === "controller" && $('bEnter').disabled)) return;
-  if (ROLE === 'controller') await publishStage('intro');
   const btn = $('bEnter');
   btn.disabled = true;
   btn.textContent = 'LOADING…';
@@ -462,8 +501,9 @@ $('bEnter').onclick = async () => {
     intro.pause();
     intro.classList.remove('intro-playing');
     state = 'intro';
-    await publishStage('intro');
     btn.textContent = 'INTRO PLAYING ON PROJECTOR';
+    $('pmsg').textContent = 'Playing intro on projector…';
+    await publishStage('intro');
     return;
   }
   intro.currentTime = 0;
@@ -482,9 +522,13 @@ async function enter() {
   try { await navigator.wakeLock.request('screen'); } catch (e) {}
   resetHand();
 }
-function resetHand() {
+function resetHand({ newRun = false } = {}) {
   skipVideoButton.hidden = true;
   lastScanSignature = "";
+  if (newRun) {
+    ceremonyRunId = Date.now();
+    publishStage('scanning');
+  }
   publishLiveScan(["waiting", "waiting", "waiting", "waiting", "waiting"], "scanning");
   currentVideoIndex = 0;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
@@ -571,7 +615,7 @@ function trigger() {
     }
   }, CONFIG.scanMs);
 }
-function playFrom(i) {
+function playFrom(i, { skipPublish = false } = {}) {
   waitingForLandscape = false;
   $('orientationWarning').classList.remove('visible');
   $('orientationWarning').setAttribute('aria-hidden', 'true');
@@ -582,12 +626,15 @@ function playFrom(i) {
   currentVideoIndex = i;
   state = 'play';
   skipVideoButton.hidden = true;
-  show('none');
-  // The iPad is only the controller. The projector device owns all video playback.
+  // The iPad is only the controller. Keep the poster + restart zone active instead of a blank screen.
   if (ROLE === 'controller') {
-    publishStage('presentation', i);
+    show('end');
+    $('end').classList.remove('video-active');
+    $('endVideoHint').textContent = 'Presentation playing on projector…';
+    if (!skipPublish) publishStage('presentation', i);
     return;
   }
+  show('none');
   vid.onended = () => playFrom(i + 1);
   vid.onerror = () => {
     console.warn('Video could not be played:', urls[i]);
@@ -684,11 +731,11 @@ $('skipOverlay').addEventListener('click', skipToVideo);
 
 /* ---- Helpers ---- */
 document.addEventListener('click', () => { if (state === 'play' && vid.paused) vid.play(); });
-$('restart').onclick = () => { if (++taps >= 3) { taps = 0; resetHand(); } setTimeout(() => taps = 0, 1500); };
+$('restart').onclick = () => { if (++taps >= 3) { taps = 0; resetHand({ newRun: true }); } setTimeout(() => taps = 0, 1500); };
 addEventListener('keydown', e => {            // desktop testing, only when testMode is true
   if (!CONFIG.testMode) return;
   if (e.key === 't' && state === 'hand') trigger();
-  if (e.key === 'r' && loaded) resetHand();
+  if (e.key === 'r' && loaded) resetHand({ newRun: true });
 });
 
 /* ---- Portrait only for the hand scan; montage and final slide stay landscape ---- */
@@ -734,8 +781,10 @@ enforceOrientationImpl();
         // Projector operator skipped the physical scan: synchronize the iPad controller.
         clearTimeout(holdT);
         holdT = null;
-        state = 'play';
-        playFrom(Number(data.videoIndex || 0));
+        playFrom(Number(data.videoIndex || 0), { skipPublish: true });
+      } else if (data.stage === 'end' && data.source === 'display' && state === 'play') {
+        state = 'end';
+        $('endVideoHint').textContent = '';
       }
     }, error => {
       console.error("Controller could not listen for intro completion:", error.code, error.message);

@@ -45,7 +45,7 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
   const url = new URL(request.url);
-  if (!/\\.(mp4|webm|mp3|wav)$/i.test(url.pathname)) return;
+  if (!/\.(mp4|webm|mp3|wav)$/i.test(url.pathname)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     const cached = await cache.match(request, { ignoreSearch: true });
