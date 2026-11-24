@@ -421,8 +421,8 @@ let currentVideoIndex = 0;
 let lastScanSignature = "";
 const skipVideoButton = $('skipVideo');
 const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-skipVideoButton.hidden = !desktopPointer.matches;
-desktopPointer.addEventListener?.('change', e => { skipVideoButton.hidden = !e.matches; });
+skipVideoButton.hidden = true; // Show only while a montage/final video is active.
+desktopPointer.addEventListener?.('change', e => { skipVideoButton.hidden = !e.matches || (state !== 'play' && state !== 'end'); });
 skipVideoButton.addEventListener('click', e => {
   e.preventDefault(); e.stopPropagation();
   if (state === 'play') playFrom(currentVideoIndex + 1);
