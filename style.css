@@ -124,10 +124,12 @@ body.display-mode #bEnter{pointer-events:none}
 
 
 /* Projector scanner layout and desktop-only operator controls */
-body.display-mode #skipT,body.display-mode #skipOverlay{display:none!important}
-#displayStatus{left:5%;right:5%;bottom:clamp(16px,3vh,30px);width:auto;text-align:center;font-size:clamp(.85rem,1.35vw,1.05rem);line-height:1.4;padding:8px 16px;max-width:760px;margin:0 auto}
-#displayControls{position:absolute;z-index:8;right:clamp(14px,3vw,36px);bottom:clamp(14px,3vh,30px);display:flex;gap:10px;align-items:center;pointer-events:auto}
+body.display-mode #hand #skipT,body.display-mode #skipT,body.display-mode #skipOverlay{display:none!important}
+body.display-mode #hand #cnt{display:block!important}
+#displayStatus{left:50%;right:auto;bottom:clamp(76px,11vh,104px);width:min(88vw,760px);transform:translateX(-50%);text-align:center;font-size:clamp(.85rem,1.35vw,1.05rem);line-height:1.45;padding:10px 18px;border:1px solid rgba(130,205,255,.16);border-radius:14px;background:rgba(3,10,24,.76);box-shadow:0 8px 28px rgba(0,0,0,.25);backdrop-filter:blur(8px);margin:0}
+#displayControls{position:absolute;z-index:8;left:50%;right:auto;bottom:clamp(14px,3vh,28px);transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;width:max-content;max-width:92vw;pointer-events:auto}
 #displayControls[hidden],#displayControls button[hidden]{display:none!important}
-#displayControls button{font-size:clamp(.68rem,.9vw,.82rem);font-weight:700;letter-spacing:.1em;padding:11px 17px;border:1px solid rgba(155,220,255,.72);background:rgba(4,18,38,.9);box-shadow:0 5px 24px rgba(0,0,0,.4);backdrop-filter:blur(9px)}
+#displayControls button{font-size:clamp(.68rem,.9vw,.82rem);font-weight:700;letter-spacing:.1em;padding:11px 17px;border:1px solid rgba(155,220,255,.72);border-radius:999px;background:rgba(4,18,38,.94);color:#e8f7ff;box-shadow:0 5px 24px rgba(0,0,0,.4);backdrop-filter:blur(9px);cursor:pointer}
 #displayControls button:hover{background:rgba(18,57,88,.96);border-color:#d7f2ff}
+@media (max-width:520px){#displayStatus{bottom:90px;font-size:.82rem}#displayControls{bottom:14px;gap:7px}#displayControls button{padding:10px 13px;font-size:.65rem}}
 @media (hover:none),(pointer:coarse){#displayControls{display:none!important}}
