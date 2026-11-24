@@ -149,6 +149,7 @@ if (ROLE === "display") {
   }
 
   function setDisplayControls(mode) {
+    panel.classList.toggle("video-playing", mode === "presentation" || mode === "end");
     const visible = armed && (mode === "scanning" || mode === "presentation");
     displayControls.hidden = !visible;
     displayControls.setAttribute("aria-hidden", String(!visible));
