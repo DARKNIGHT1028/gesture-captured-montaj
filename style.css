@@ -123,6 +123,95 @@ body.display-mode>#scanSound,body.display-mode>#vid,body.display-mode>#skipVideo
 body.display-mode #bEnter{pointer-events:none}
 
 
+/* Projector operator controls: isolated, fixed and always clickable on laptop displays. */
+body.display-mode #skipT,
+body.display-mode #skipOverlay,
+body.display-mode #hand #skipT { display:none !important; }
+
+body.display-mode #displayScreen {
+  pointer-events:auto !important;
+  isolation:isolate;
+}
+body.display-mode #displayScreen video { z-index:0; }
+body.display-mode #displayStatus {
+  z-index:101 !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:92px !important;
+  width:min(88vw,760px) !important;
+  transform:translateX(-50%) !important;
+  box-sizing:border-box;
+  margin:0 !important;
+  padding:10px 18px !important;
+  border:1px solid rgba(130,205,255,.2);
+  border-radius:14px;
+  background:rgba(3,10,24,.88);
+  line-height:1.4;
+  pointer-events:none !important;
+}
+body.display-mode #displayControls {
+  position:fixed !important;
+  z-index:2147483000 !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:18px !important;
+  transform:translateX(-50%) !important;
+  display:flex !important;
+  flex-direction:row;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  width:max-content;
+  max-width:94vw;
+  padding:8px;
+  border-radius:18px;
+  background:rgba(2,8,20,.94);
+  box-shadow:0 8px 32px rgba(0,0,0,.55);
+  pointer-events:auto !important;
+  touch-action:manipulation;
+}
+body.display-mode #displayControls[hidden],
+body.display-mode #displayControls button[hidden] {
+  display:none !important;
+}
+body.display-mode #displayControls button {
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:48px;
+  min-width:150px;
+  margin:0;
+  padding:12px 20px;
+  border:1px solid rgba(155,220,255,.85);
+  border-radius:999px;
+  background:#102b40;
+  color:#f2fbff;
+  font:700 14px/1.2 system-ui,sans-serif;
+  letter-spacing:.1em;
+  cursor:pointer;
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+}
+body.display-mode #displayControls button:hover {
+  background:#194866;
+  border-color:#fff;
+}
+body.display-mode #displayControls button:active {
+  transform:scale(.97);
+  background:#24658b;
+}
+@media (max-width:600px) {
+  body.display-mode #displayStatus { bottom:112px !important; font-size:.8rem; }
+  body.display-mode #displayControls { bottom:12px !important; gap:7px; }
+  body.display-mode #displayControls button { min-width:128px; min-height:46px; padding:10px 13px; font-size:12px; }
+}
 /* Projector scanner layout and desktop-only operator controls */
 body.display-mode #hand #skipT,body.display-mode #skipT,body.display-mode #skipOverlay{display:none!important}
 body.display-mode #hand #cnt{display:block!important}
