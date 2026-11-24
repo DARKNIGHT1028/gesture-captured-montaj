@@ -21,9 +21,11 @@ button:disabled{opacity:.5}
 @keyframes ping{0%{transform:scale(.3);opacity:.9}100%{transform:scale(4);opacity:0}}
 #slines{position:absolute;bottom:10vh;left:0;right:0;font-size:clamp(1.5rem,5vw,3rem);letter-spacing:.35em;color:#fff;text-shadow:0 0 20px var(--ac);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:.6}}
-/* Desktop-only test button */
+/* Operator scan skip button (hidden in projector view) */
 .test{font-size:.9rem;padding:10px 26px;letter-spacing:.15em}
 #skipT{display:none;margin-top:14px}
+body.operator-view #skipT{display:inline-flex;align-items:center;justify-content:center}
+body.operator-view #hand.locked #skipT{opacity:0;pointer-events:none}
 @media (hover:hover) and (pointer:fine){#skipT{display:inline-flex;align-items:center;justify-content:center}}
 /* video + end */
 #vid{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;pointer-events:none;transition:opacity .6s;z-index:5}
@@ -72,16 +74,18 @@ button:disabled{opacity:.5}
 #orientationWarning h2{font-size:clamp(1.2rem,4vw,2rem);line-height:1.35;margin:0 0 14px}
 #orientationWarning p{color:var(--fg);font-size:clamp(1rem,2.6vw,1.25rem);line-height:1.5;margin:8px 0}
 #orientationWarning .orientation-hint{color:var(--mut);font-size:.95rem}
-/* Duplicate desktop test shortcut inside the orientation overlay so it remains reachable when the overlay covers the scanner. */
+/* Operator skip shortcut inside orientation overlay */
 .desktop-skip{display:none;margin-top:22px;position:relative;z-index:21;pointer-events:auto}
+body.operator-view .desktop-skip{display:inline-flex;align-items:center;justify-content:center}
 @media (hover:hover) and (pointer:fine){.desktop-skip{display:inline-flex;align-items:center;justify-content:center}}
 
-/* Desktop-only video skip control */
+/* Operator video skip control */
 #skipVideo{display:none;position:fixed;z-index:20;right:28px;bottom:26px;padding:13px 20px;border:1px solid rgba(155,220,255,.65);border-radius:999px;background:rgba(4,18,38,.82);color:#e8f7ff;font:600 13px/1 system-ui,sans-serif;letter-spacing:.12em;cursor:pointer;box-shadow:0 5px 24px rgba(0,0,0,.35);backdrop-filter:blur(8px)}
 #skipVideo:not([hidden]){display:inline-flex;align-items:center;gap:12px}
 #skipVideo:hover{background:rgba(18,57,88,.95);border-color:#d7f2ff}
 #skipVideo span{font-size:19px;line-height:10px}
-@media (hover:none),(pointer:coarse){#skipVideo{display:none!important}}
+body:not(.operator-view) #skipVideo{display:none!important}
+@media (hover:hover) and (pointer:fine){body:not(.projector-view):not(.display-mode) #skipVideo:not([hidden]){display:inline-flex}}
 
 /* Full-screen intro shown after ENTER */
 #intro{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;visibility:hidden;z-index:30}
@@ -181,3 +185,31 @@ body.display-mode #displayControls #displaySkipVideo:hover{
   body.display-mode #displayControls{bottom:12px;gap:6px}
   body.display-mode #displayControls button{min-width:128px;min-height:44px;padding:10px 16px;font-size:12px}
 }
+
+/* ===== Static GitHub Pages dual-screen Operator & Projector views ===== */
+#openProjector{display:none;margin-top:16px;min-height:38px;padding:9px 22px;font-size:.72rem;letter-spacing:.18em;color:var(--mut);border-color:rgba(180,235,255,.2);background:rgba(255,255,255,.04);box-shadow:none;text-shadow:none;opacity:.85}
+body.operator-view #openProjector{display:inline-flex;align-items:center;justify-content:center}
+#openProjector:hover{color:#eaf8ff;border-color:rgba(180,235,255,.55);letter-spacing:.2em;opacity:1;box-shadow:0 0 18px rgba(80,220,255,.16)}
+#pmsg{min-height:1.2em;font-size:.85rem}
+
+body.projector-view #skipT,
+body.projector-view #skipOverlay,
+body.projector-view #skipVideo,
+body.projector-view #displayControls,
+body.projector-view #displaySkipScan,
+body.projector-view #displaySkipVideo,
+body.projector-view #openProjector,
+body.projector-view #orientationWarning,
+body.projector-view #displayScreen,
+body.projector-view #endVideoHint,
+body.projector-view #pmsg{display:none!important}
+body.projector-view #bEnter{pointer-events:none}
+body.projector-view #hand{box-sizing:border-box;justify-content:center;gap:clamp(6px,1.2vh,14px);padding:clamp(12px,2.2vh,24px);overflow:hidden}
+body.projector-view #hand h2{flex:0 0 auto;margin:0;font-size:clamp(1.05rem,2vw,1.75rem);line-height:1.25}
+body.projector-view #hand #tpl{display:block;flex:0 0 auto;min-height:0;width:max(260px,min(92vw,calc((100dvh - 155px) * 608 / 476),1060px))!important;height:auto!important;aspect-ratio:608 / 476}
+body.projector-view #hand #cnt{display:block!important;flex:0 0 auto;opacity:1;margin:0;padding:2px 12px;font-size:clamp(1.1rem,1.9vw,1.6rem);line-height:1.2;color:#dff7ff;text-shadow:0 0 14px rgba(80,220,255,.35);transition:opacity .25s ease}
+body.projector-view #hand.locked #cnt{opacity:0!important}
+body.projector-view #scan #slines{bottom:clamp(48px,10vh,110px);z-index:4;width:100%;padding:0 16px;box-sizing:border-box;font-size:clamp(1.4rem,4vw,3rem);letter-spacing:.18em}
+
+#projectorHint{display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;padding:10px 20px;border-radius:999px;border:1px solid rgba(180,235,255,.35);background:rgba(3,10,24,.82);color:#dff7ff;font-size:.85rem;letter-spacing:.08em;backdrop-filter:blur(10px);pointer-events:none}
+body.projector-view #projectorHint:not([hidden]){display:block}
