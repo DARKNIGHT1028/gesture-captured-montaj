@@ -222,3 +222,59 @@ body.display-mode #hand #cnt{display:block!important}
 #displayControls button:hover{background:rgba(18,57,88,.96);border-color:#d7f2ff}
 @media (max-width:520px){#displayStatus{bottom:90px;font-size:.82rem}#displayControls{bottom:14px;gap:7px}#displayControls button{padding:10px 13px;font-size:.65rem}}
 @media (hover:none),(pointer:coarse){#displayControls{display:none!important}}
+
+
+/* Projector scan layout: keep the complete counter and controls inside the visible frame. */
+body.display-mode #hand {
+  box-sizing:border-box;
+  justify-content:flex-start;
+  gap:4px;
+  padding:clamp(12px,2vh,22px) 22px 150px !important;
+  overflow:hidden;
+}
+body.display-mode #hand h2 {
+  flex:0 0 auto;
+  margin:4px 0 2px;
+  font-size:clamp(1rem,2.1vw,1.65rem);
+  line-height:1.25;
+}
+body.display-mode #hand #tpl {
+  display:block;
+  flex:1 1 auto;
+  min-height:0;
+  height:auto !important;
+  max-height:56vh;
+  max-width:min(94vw,760px);
+  width:auto;
+}
+body.display-mode #hand #cnt {
+  display:block !important;
+  flex:0 0 auto;
+  opacity:1 !important;
+  margin:2px 0 0;
+  padding:4px 12px;
+  font-size:clamp(1.15rem,2vw,1.6rem);
+  line-height:1.2;
+  color:#dff7ff;
+  text-shadow:0 0 14px rgba(80,220,255,.35);
+}
+body.display-mode #displayStatus {
+  bottom:88px !important;
+  max-height:48px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+body.display-mode #displayControls {
+  bottom:12px !important;
+}
+body.display-mode #scan #slines {
+  bottom:clamp(105px,14vh,150px);
+  z-index:4;
+  width:100%;
+  padding:0 16px;
+  box-sizing:border-box;
+  font-size:clamp(1.4rem,4vw,3rem);
+  letter-spacing:.18em;
+}
