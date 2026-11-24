@@ -301,3 +301,24 @@ button:disabled{opacity:.4;box-shadow:none}
 #skipVideo{font-weight:400;font-size:.72rem;letter-spacing:.2em;padding:12px 22px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.02))}
 #displayControls{background:rgba(2,8,20,.55);border:1px solid rgba(180,235,255,.14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 #displayControls button{font-weight:400;font-size:.75rem;letter-spacing:.2em;min-height:44px;min-width:140px;padding:11px 22px}
+
+/* Touch of Excellence refinements: tighter scanner composition and ZIP-style glass controls. */
+body.display-mode #hand { gap:2px !important; padding-bottom:132px !important; }
+body.display-mode #hand #tpl { max-height:64vh !important; }
+body.display-mode #hand #cnt { margin-top:0 !important; padding-top:2px !important; padding-bottom:2px !important; }
+body.display-mode #displayControls { gap:8px !important; padding:6px !important; }
+body.display-mode #displayControls button {
+  min-height:44px !important; min-width:142px !important; padding:11px 24px !important;
+  border:1px solid rgba(180,235,255,.42) !important; border-radius:999px !important;
+  color:#eaf8ff !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.035)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 22px rgba(80,220,255,.12) !important;
+  -webkit-backdrop-filter:blur(12px) !important; backdrop-filter:blur(12px) !important;
+  font:400 13px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif !important;
+  letter-spacing:.2em !important; text-transform:uppercase !important;
+}
+body.display-mode #displayControls button:hover {
+  border-color:rgba(200,245,255,.85) !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(80,220,255,.08)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 28px rgba(80,220,255,.25) !important;
+}
