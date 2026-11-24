@@ -222,14 +222,19 @@ if (ROLE === "display") {
     finalVideo.onended = () => finalVideo.pause();
     finalVideo.onerror = () => showStatus("FINAL VIDEO FAILED TO LOAD — check video/majlis-animated-electronic-sound.mp4");
     finalVideo.src = finalSrc;
+    finalVideo.onloadedmetadata = async () => {
+      // Match the iPad ending video: begin at 00:01, not 00:00.
+      const startAt = Math.min(1, Math.max(0, finalVideo.duration - 0.25));
+      try { finalVideo.currentTime = startAt; } catch (error) {}
+      try {
+        await finalVideo.play();
+        hideStatus();
+      } catch (error) {
+        showStatus("Tap the screen to start the final presentation");
+        console.error("Final video playback blocked:", error);
+      }
+    };
     finalVideo.load();
-    try {
-      await finalVideo.play();
-      hideStatus();
-    } catch (error) {
-      showStatus("Tap the screen to start the final presentation");
-      console.error("Final video playback blocked:", error);
-    }
   }
   async function playVideo(index, runId) {
     if (!armed || runId !== activeRun) return;
