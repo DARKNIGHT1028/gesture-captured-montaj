@@ -1,8 +1,8 @@
-const CACHE_NAME = "touch-excellence-media-v1";
+const CACHE_NAME = "touch-excellence-media-v2";
 const MEDIA_FILES = [
   "./images/intro.mp4",
-  "./video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4",
-  "./video/montage-after-scan.mp4",
+  "./video/Montaj after scanned.mp4",
+  "./video/Mid_video_compressed.mp4",
   "./video/majlis-animated-electronic-sound.mp4"
 ];
 
