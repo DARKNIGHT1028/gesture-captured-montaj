@@ -566,6 +566,7 @@ async function enter() {
   resetHand();
 }
 function resetHand({ newRun = false } = {}) {
+  document.body.classList.remove('allow-restart');
   skipVideoButton.hidden = true;
   lastScanSignature = "";
   if (newRun) ceremonyRunId = Date.now();
@@ -667,11 +668,12 @@ function playFrom(i, { skipPublish = false } = {}) {
   currentVideoIndex = i;
   state = 'play';
   skipVideoButton.hidden = true;
-  // The iPad is only the controller. Keep the poster + restart zone active instead of a blank screen.
+  // The iPad is only the controller; all visuals play on the projector screen, so keep the iPad blank.
   if (ROLE === 'controller') {
-    show('end');
+    document.body.classList.add('allow-restart');
+    show('none');
     $('end').classList.remove('video-active');
-    $('endVideoHint').textContent = 'Presentation playing on projector…';
+    $('endVideoHint').textContent = '';
     if (!skipPublish) publishStage('presentation', i);
     return;
   }
@@ -698,6 +700,12 @@ function finish() {
   vid.pause();
   vid.classList.remove('on');
   state = 'end';
+  document.body.classList.add('allow-restart');
+  if (ROLE === 'controller') {
+    skipVideoButton.hidden = true;
+    show('none');
+    return;
+  }
   skipVideoButton.hidden = !desktopPointer.matches;
   show('end');
   startFinalPresentation();
