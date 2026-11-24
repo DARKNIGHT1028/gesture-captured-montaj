@@ -98,8 +98,8 @@ if (ROLE === "display") {
     });
   }
   const videos = [
-    "video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4",
-    "video/montage-after-scan.mp4"
+    "video/Montaj after scanned.mp4",
+    "video/Mid_video_compressed.mp4"
   ];
   const finalSrc = "video/majlis-animated-electronic-sound.mp4";
   let armed = false;
@@ -297,7 +297,7 @@ if (ROLE === "display") {
 } else {
 /* ===== TOUCH OF EXCELLENCE – settings (edit here) ===== */
 const CONFIG = {
-  videos: ['video/Copy of Montaj  Gimik Majlis Apresiasi (Edisi 1.0) (1).mp4', 'video/montage-after-scan.mp4'], // sequential post-scan videos
+  videos: ['video/Montaj after scanned.mp4', 'video/Mid_video_compressed.mp4'], // sequential post-scan videos
   testMode: false,    // false = the five-finger scan is the ONLY way forward. true = show SKIP (TEST) button + keys t / r
   holdMs: 700,        // how long all five fingers must stay down
   scanMs: 4200,       // length of the scanning animation
