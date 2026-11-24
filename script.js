@@ -240,6 +240,7 @@ if (ROLE === "display") {
     if (!armed || runId !== activeRun) return;
     if (index >= videos.length) { setDisplayControls("end"); return playFinal(); }
     setDisplayControls("presentation");
+    hideStatus(); // Never leave the waiting message over a playing montage.
     playing = true;
     pending = { stage: "presentation", videoIndex: index, runId };
     finalVideo.pause();
