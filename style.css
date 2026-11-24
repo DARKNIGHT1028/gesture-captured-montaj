@@ -90,7 +90,7 @@ button:disabled{opacity:.5}
 /* Larger, responsive hand target for a wider range of hand sizes */
 #hand{gap:clamp(6px,1.4vh,14px);padding:clamp(10px,2.2vh,24px)}
 #hand h2{width:100%;max-width:900px;margin:0 0 clamp(2px,1vh,10px);font-size:clamp(1rem,2.8vh,1.8rem);letter-spacing:clamp(.04em,.12vw,.16em)}
-#hand #tpl{width:min(94vw,calc(74dvh * 480 / 452),760px);height:auto;aspect-ratio:480 / 452;flex:0 0 auto;overflow:visible}
+#hand #tpl{width:min(94vw,calc(76dvh * 480 / 452),920px);height:auto;aspect-ratio:480 / 452;flex:0 0 auto;overflow:visible}
 #hand #cnt{font-size:clamp(1rem,2.8vh,1.4rem);margin:clamp(2px,.8vh,10px) 0 0}
 #hand .pad{pointer-events:all}
 @media (max-height:700px){
@@ -116,23 +116,23 @@ body.display-mode #bEnter{pointer-events:none}
 .display-gate-card p{font-size:.75rem;color:#8aa0c0;margin:4px 0 10px;letter-spacing:.06em}
 .display-gate-card small{display:block;color:#8aa0c0;font-size:.65rem;margin-top:6px;letter-spacing:.02em}
 
-#displayStatus{position:absolute;z-index:101;left:50%;bottom:84px;width:min(88vw,760px);transform:translateX(-50%);display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(.82rem,1.35vw,1rem);line-height:1.4;color:#dff7ff;text-shadow:0 0 24px rgba(80,220,255,.45);padding:10px 18px;border:1px solid rgba(130,205,255,.2);border-radius:14px;background:rgba(3,10,24,.84);box-shadow:0 8px 28px rgba(0,0,0,.28);backdrop-filter:blur(8px);margin:0;pointer-events:none}
+#displayStatus{position:absolute;z-index:101;left:50%;bottom:78px;width:min(88vw,760px);transform:translateX(-50%);display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(.82rem,1.3vw,1rem);line-height:1.35;color:#dff7ff;text-shadow:0 0 24px rgba(80,220,255,.45);padding:8px 18px;border:1px solid rgba(130,205,255,.2);border-radius:14px;background:rgba(3,10,24,.84);box-shadow:0 8px 28px rgba(0,0,0,.28);backdrop-filter:blur(8px);margin:0;pointer-events:none}
 #displayStatus[hidden]{display:none!important}
 
 /* Visible press feedback on the mirrored ENTER button. */
 #bEnter.projector-pressed{transform:scale(.94);filter:brightness(1.55);box-shadow:0 0 0 5px rgba(125,255,160,.25),0 0 32px rgba(125,255,160,.8);border-color:#7dffa0;transition:transform .12s ease,filter .12s ease,box-shadow .12s ease}
 
 /* Projector operator controls */
-#displayControls{position:fixed;z-index:2147483000;left:50%;bottom:16px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;width:max-content;max-width:94vw;padding:6px;border-radius:999px;background:rgba(2,8,20,.55);border:1px solid rgba(180,235,255,.14);box-shadow:0 8px 32px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);pointer-events:auto;touch-action:manipulation}
+#displayControls{position:fixed;z-index:2147483000;left:50%;bottom:14px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;width:max-content;max-width:94vw;padding:6px;border-radius:999px;background:rgba(2,8,20,.55);border:1px solid rgba(180,235,255,.14);box-shadow:0 8px 32px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);pointer-events:auto;touch-action:manipulation}
 #displayControls[hidden],#displayControls button[hidden]{display:none!important}
 
 /* Projector scan layout: keep counter, status, and controls cleanly separated */
-body.display-mode #hand{box-sizing:border-box;justify-content:center;gap:clamp(4px,1vh,10px);padding:clamp(10px,2vh,20px) 22px 136px!important;overflow:hidden}
-body.display-mode #hand h2{flex:0 0 auto;margin:0;font-size:clamp(1rem,2.1vw,1.65rem);line-height:1.25}
-body.display-mode #hand #tpl{display:block;flex:0 0 auto;min-height:0;width:min(92vw,calc(58vh * 480 / 452),660px)!important;height:auto!important;aspect-ratio:480 / 452}
-body.display-mode #hand #cnt{display:block!important;flex:0 0 auto;opacity:1;margin:2px 0 0;padding:2px 12px;font-size:clamp(1.1rem,2vw,1.55rem);line-height:1.2;color:#dff7ff;text-shadow:0 0 14px rgba(80,220,255,.35);transition:opacity .25s ease}
+body.display-mode #hand{box-sizing:border-box;justify-content:center;gap:clamp(4px,1vh,10px);padding:clamp(10px,1.8vh,20px) 24px 124px!important;overflow:hidden}
+body.display-mode #hand h2{flex:0 0 auto;margin:0;font-size:clamp(1.05rem,2vw,1.75rem);line-height:1.25}
+body.display-mode #hand #tpl{display:block;flex:0 0 auto;min-height:0;width:max(240px,min(92vw,calc((100dvh - 245px) * 480 / 452),960px))!important;height:auto!important;aspect-ratio:480 / 452}
+body.display-mode #hand #cnt{display:block!important;flex:0 0 auto;opacity:1;margin:0;padding:2px 12px;font-size:clamp(1.1rem,1.9vw,1.6rem);line-height:1.2;color:#dff7ff;text-shadow:0 0 14px rgba(80,220,255,.35);transition:opacity .25s ease}
 body.display-mode #hand.locked #cnt{opacity:0!important}
-body.display-mode #scan #slines{bottom:clamp(140px,16vh,180px);z-index:4;width:100%;padding:0 16px;box-sizing:border-box;font-size:clamp(1.4rem,4vw,3rem);letter-spacing:.18em}
+body.display-mode #scan #slines{bottom:clamp(132px,15vh,172px);z-index:4;width:100%;padding:0 16px;box-sizing:border-box;font-size:clamp(1.4rem,4vw,3rem);letter-spacing:.18em}
 
 /* ===== Touch of Excellence glass-button UI ===== */
 button,#skipVideo,#displayControls button,.display-gate-card button{
